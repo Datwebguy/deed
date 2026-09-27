@@ -62,7 +62,8 @@ npm run dev
 
 - SERV key: console.openserv.ai. Turn on data collection under Organization settings.
 - CDP keys: portal.cdp.coinbase.com (API key id, secret, and wallet secret).
-- `TRUST_NETWORK` defaults to `base-sepolia`. Fund a trust by sending test USDC to the address shown on its page.
+- Each trust chooses its money when it is made: **test money** (Base Sepolia, the default) or **real money** (USDC on Base). The choice is part of the terms the settlor signs. A real-money trust needs about $1 of ETH on Base in its wallet for network fees. `TRUST_NETWORK` only sets the site's default; the demo always uses test money.
+- Optional RPCs per network: `BASE_SEPOLIA_RPC_URL`, `BASE_MAINNET_RPC_URL` (`BASE_RPC_URL` still applies to the default network).
 - Records are JSON files in `data/` locally, or Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set.
 - `/api/health` shows what is connected: SERV key, CDP keys, whether the wallet opens, gas balance, and whether the chain RPC answers.
 - The public Base RPC is rate limited. For a demo, set `BASE_RPC_URL` to a dedicated endpoint (the history reads chain logs in 9,000-block windows; set `LOGS_WINDOW` lower if your provider caps ranges).

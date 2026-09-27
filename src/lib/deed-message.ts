@@ -9,6 +9,7 @@ export type SignedTerms = {
   settlor: string;
   deed: string;
   perRequestMax: number;
+  network: "base" | "base-sepolia";
   protector?: string;
   beneficiaries: { name: string; wallet: string; yearlyCap: number }[];
   issuedAt: string;
@@ -19,6 +20,7 @@ export function deedMessage(t: SignedTerms) {
   return `Deed: I am setting up this trust and I confirm these wishes.
 
 Trust: ${t.name}
+Money: ${t.network === "base" ? "real USDC on Base" : "test USDC on Base Sepolia"}
 Settlor: ${t.settlor}
 Wishes fingerprint: ${keccak256(toBytes(t.deed))}
 Pays only to:

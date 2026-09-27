@@ -4,7 +4,7 @@ import { isAddress, type Address, type Hex } from "viem";
 import { deedMessage } from "@/lib/deed-message";
 import { newKey } from "@/lib/access";
 import { newId, saveTrust } from "@/lib/store";
-import { currentBlock, publicClient, trustAddress } from "@/lib/wallet";
+import { NETWORK, clientOf, currentBlock, trustAddress } from "@/lib/wallet";
 import type { Trust } from "@/lib/types";
 
 const Body = z.object({
@@ -14,6 +14,7 @@ const Body = z.object({
   protectorEmail: z.string().email().max(120).optional().or(z.literal("")),
   deed: z.string().min(40).max(8000),
   perRequestMax: z.coerce.number().positive(),
+  network: z.enum(["base", "base-sepolia"]).default(NETWORK),
   liquidBuffer: z.coerce.number().min(0).default(0),
   beneficiaries: z
     .array(
@@ -63,6 +64,7 @@ export async function POST(req: Request) {
     settlor: b.settlor,
     deed: b.deed,
     perRequestMax: b.perRequestMax,
+    network: b.network,
     protector: b.protector || undefined,
     beneficiaries: b.beneficiaries,
     issuedAt: b.issuedAt,
@@ -70,7 +72,8 @@ export async function POST(req: Request) {
   let valid = false;
   try {
     // Works for ordinary wallets and for smart wallets such as Base Account.
-    valid = await publicClient.verifyMessage({ address: b.settlorAddress as Address, message, signature: b.signature as Hex });
+    // Checked on the chain the settlor chose, where their wallet signed.
+    valid = await clientOf(b.network).verifyMessage({ address: b.settlorAddress as Address, message, signature: b.signature as Hex });
   } catch {
     return NextResponse.json({ error: "Couldn't check your signature right now. Try again in a moment." }, { status: 502 });
   }
@@ -86,6 +89,7 @@ export async function POST(req: Request) {
     protectorKey: newKey(),
     deed: b.deed,
     perRequestMax: b.perRequestMax,
+    network: b.network,
     liquidBuffer: b.liquidBuffer,
     beneficiaries: b.beneficiaries.map((p) => ({ ...p, id: newId(), key: newKey() })),
     settlorAddress: b.settlorAddress,
@@ -97,7 +101,7 @@ export async function POST(req: Request) {
   // Open the trust's wallet now so its address can be funded straight away.
   // If the chain or CDP is unreachable the trust is still saved and the
   // wallet is opened on first view.
-  const [address, block] = await Promise.allSettled([trustAddress(trust.id), currentBlock()]);
+  const [address, block] = await Promise.allSettled([trustAddress(trust.id), currentBlock(b.network)]);
   if (address.status === "fulfilled" && address.value) trust.address = address.value;
   if (block.status === "fulfilled") trust.fromBlock = Number(block.value);
   await saveTrust(trust);

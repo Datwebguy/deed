@@ -6,7 +6,7 @@ import { oneAtATime } from "@/lib/queue";
 import { enforce, spentThisYear } from "@/lib/rules";
 import { getRequest, getTrust, saveRequest } from "@/lib/store";
 import { trustState } from "@/lib/trust-state";
-import { payUsdc } from "@/lib/wallet";
+import { netOf, payUsdc } from "@/lib/wallet";
 
 export const maxDuration = 120;
 
@@ -64,7 +64,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
     record.final = final;
     if (amount > 0 && who.wallet) {
       try {
-        record.payoutTx = await payUsdc(t.id, who.wallet as Address, amount);
+        record.payoutTx = await payUsdc(t.id, who.wallet as Address, amount, netOf(t));
         record.paid = amount;
         delete record.payoutError;
       } catch (e) {

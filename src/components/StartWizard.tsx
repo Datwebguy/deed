@@ -9,6 +9,7 @@ import Thinking from "@/components/ui/Thinking";
 import WalletChip, { shortAddress, useWallet } from "@/components/WalletChip";
 import { connectWallet, preloadBaseAccount, signWithWallet } from "@/lib/browser-wallet";
 import { deedMessage, type SignedTerms } from "@/lib/deed-message";
+import { setSiteNet, useSiteNet, type SiteNet } from "@/lib/net-pref";
 import { TEMPLATES, type Person } from "@/lib/templates";
 import type { DeedCheck } from "@/lib/types";
 
@@ -30,6 +31,9 @@ export default function StartWizard({ network }: { network: string }) {
   const [perRequestMax, setPerRequestMax] = useState("500");
   const [protector, setProtector] = useState("");
   const [protectorEmail, setProtectorEmail] = useState("");
+  // Follows the Testnet / Mainnet switch; choosing here flips the switch too.
+  const money = useSiteNet(network as SiteNet);
+  const setMoney = setSiteNet;
   const [check, setCheck] = useState<DeedCheck | null>(null);
   const [checkedDeed, setCheckedDeed] = useState("");
   const [added, setAdded] = useState<number[]>([]);
@@ -63,7 +67,7 @@ export default function StartWizard({ network }: { network: string }) {
   async function fillFromMyWallet(i: number) {
     setError("");
     try {
-      setPerson(i, { wallet: connected ?? (await connectWallet(network)) });
+      setPerson(i, { wallet: connected ?? (await connectWallet(money)) });
     } catch (e) {
       setError((e as Error).message);
     }
@@ -103,11 +107,12 @@ export default function StartWizard({ network }: { network: string }) {
         settlor: settlor.trim(),
         deed,
         perRequestMax: Number(perRequestMax),
+        network: money,
         protector: protector.trim() || undefined,
         beneficiaries: people.map((p) => ({ name: p.name.trim(), wallet: p.wallet, yearlyCap: Number(p.yearlyCap) })),
         issuedAt: new Date().toISOString(),
       };
-      const { address, signature } = await signWithWallet(network, deedMessage(terms));
+      const { address, signature } = await signWithWallet(money, deedMessage(terms));
       const res = await fetch("/api/trusts", {
         method: "POST",
         body: JSON.stringify({
@@ -365,6 +370,34 @@ export default function StartWizard({ network }: { network: string }) {
                 <p className="mt-3 text-lg text-muted">Hard limits, and someone who can step in.</p>
                 <div className="mt-8 grid gap-4">
                   <div className="card p-5">
+                    <p className="font-medium">Money</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Money">
+                      {(
+                        [
+                          ["base-sepolia", "Test money", "Free test USDC on Base Sepolia. For trying it out."],
+                          ["base", "Real money", "Real USDC on Base. Needs about $1 of ETH for fees."],
+                        ] as const
+                      ).map(([value, title, note]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={money === value}
+                          onClick={() => setMoney(value)}
+                          className={`rounded-2xl border p-4 text-left transition ${
+                            money === value ? "border-seal ring-2 ring-seal/20" : "border-rule hover:border-ink"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 font-medium">
+                            <span className={`size-3 rounded-full border ${money === value ? "border-seal bg-seal" : "border-rule"}`} />
+                            {title}
+                          </span>
+                          <span className="mt-1 block text-xs text-muted">{note}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="card p-5">
                     <Field label="Largest single payment ($)">
                       <input className="field" inputMode="decimal" value={perRequestMax} onChange={(e) => setPerRequestMax(e.target.value)} />
                     </Field>
@@ -423,6 +456,9 @@ export default function StartWizard({ network }: { network: string }) {
                     <div>
                       <p className="eyebrow mb-2">Safeguards</p>
                       <ul className="grid gap-1 text-sm">
+                        <li className={money === "base" ? "font-medium text-seal" : ""}>
+                          {money === "base" ? "Real USDC on Base" : "Test money on Base Sepolia"}
+                        </li>
                         <li>Largest payment ${Number(perRequestMax).toLocaleString("en-US")}</li>
                         <li>
                           Protector: {protector || "none"}
@@ -442,7 +478,7 @@ export default function StartWizard({ network }: { network: string }) {
                         : "Connect a wallet to sign. Free, moves no money."}
                     </p>
                   </div>
-                  <WalletChip network={network} />
+                  <WalletChip network={money} />
                 </div>
 
               </>
