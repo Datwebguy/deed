@@ -83,7 +83,7 @@ export default function HeroDemo() {
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between border-b border-rule px-5 py-3 text-xs text-muted">
           <span className="flex items-center gap-2">
-            <span className="live-dot" /> Ada&apos;s education fund
+            <span className="rounded-full bg-paper-2 px-2 py-0.5 text-[10px] tracking-wider uppercase">Example</span> Ada&apos;s education fund
           </span>
           <span className="font-mono">$4,210.00 held</span>
         </div>

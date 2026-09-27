@@ -27,8 +27,8 @@ export default function Locks() {
         transition={{ duration: 0.7 }}
         className="card p-6"
       >
-        <p className="eyebrow">Lock 1 · the trustee reasons</p>
-        <p className="mt-4 text-sm text-muted">Ada asks for $300: “Uniforms and books for the new school year.”</p>
+        <p className="eyebrow">Lock 1 · AI reasoning</p>
+        <p className="mt-4 text-sm text-muted">Example: Ada asks $300 for uniforms and books.</p>
         <p className="mt-4 border-l-2 border-gold pl-3 font-serif text-lg italic">
           “Books, uniforms and exam fees: up to $300 per school year, with a receipt.”
         </p>
@@ -66,7 +66,7 @@ export default function Locks() {
         transition={{ duration: 0.7, delay: 0.2 }}
         className="card p-6"
       >
-        <p className="eyebrow">Lock 2 · fixed rules, in code</p>
+        <p className="eyebrow">Lock 2 · fixed rules</p>
         <ul className="mt-4 grid gap-2.5">
           {RULES.map(([rule, note], i) => {
             const lowered = note.includes("lowered");

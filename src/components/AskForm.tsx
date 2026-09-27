@@ -64,7 +64,7 @@ export default function AskForm({
         {busy ? (
           <motion.div key="busy" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Thinking steps={STAGES} every={3200} />
-            <p className="mt-3 text-center text-xs text-muted">The trustee reads every request against the wishes. This takes about 20 seconds.</p>
+            <p className="mt-3 text-center text-xs text-muted">About 20 seconds.</p>
           </motion.div>
         ) : result ? (
           <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
@@ -108,7 +108,7 @@ export default function AskForm({
             </label>
             <label className="grid gap-1.5">
               <span className="text-sm font-medium text-ink-2">
-                Proof <span className="font-normal text-muted">· paste the invoice, bill or letter</span>
+                Proof <span className="font-normal text-muted">· invoice, bill or letter</span>
               </span>
               <textarea className="field min-h-24 font-mono text-sm" placeholder="Invoice #1042 · Greenfield Secondary · Term 2 · $420" value={evidence} onChange={(e) => setEvidence(e.target.value)} />
             </label>

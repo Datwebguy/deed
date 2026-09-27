@@ -10,7 +10,7 @@ export default function ProtectorDemo() {
   return (
     <div className="card overflow-hidden">
       <div className="flex items-center justify-between border-b border-rule px-5 py-3 text-xs text-muted">
-        <span>Grace · protector</span>
+        <span>Example · Grace, protector</span>
         <span className="chip">
           <span className={`size-1.5 rounded-full ${paused ? "bg-seal" : "bg-leaf"}`} />
           {paused ? "Payouts paused" : "Payouts on"}

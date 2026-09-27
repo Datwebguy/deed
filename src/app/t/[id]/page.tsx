@@ -9,6 +9,9 @@ import PauseControl from "@/components/PauseControl";
 import SealedBanner from "@/components/SealedBanner";
 import ShareLinks from "@/components/ShareLinks";
 import CountUp from "@/components/ui/CountUp";
+import DeleteTrust from "@/components/DeleteTrust";
+import Seal from "@/components/ui/Seal";
+import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import { canPause, roleFor } from "@/lib/access";
 import { emailConfigured } from "@/lib/notify";
@@ -27,6 +30,18 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
   const trust = await getTrust(id);
   if (!trust) notFound();
   const role = roleFor(trust, key);
+  // Without a private link, nothing about the trust is shown.
+  if (role.kind === "public")
+    return (
+      <div className="mx-auto grid max-w-md place-items-center px-4 py-32 text-center">
+        <Seal className="text-5xl" />
+        <h1 className="mt-6 font-serif text-4xl">This trust is private.</h1>
+        <p className="mt-3 text-muted">Open it with your own private link.</p>
+        <Link href="/" className="btn-ghost mt-8">
+          Back to Deed
+        </Link>
+      </div>
+    );
   const state = await trustState(trust);
 
   const flagged = state.requests.filter((r) => r.decision?.flagged);
@@ -47,9 +62,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
         ? `Protector · ${trust.protector || "you"}`
         : role.kind === "beneficiary"
           ? `Signed in as ${role.person.name}`
-          : role.kind === "public"
-            ? "Read-only"
-            : null;
+          : null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-10 pb-24 sm:px-6">
@@ -66,15 +79,11 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           </span>
           {trust.paused && <span className="chip !border-seal/50 !text-seal">Payouts paused</span>}
         </div>
-        {role.kind === "public" && (
-          <p className="mt-3 text-sm text-muted">Named people ask the trustee through their own private link.</p>
-        )}
       </Reveal>
 
       {trust.paused && (
         <div className="mt-6 rounded-2xl border border-seal/40 bg-seal-soft/60 px-5 py-4 text-sm text-seal">
-          Payouts were paused by the {trust.paused.by} on {new Date(trust.paused.at).toUTCString()}. The trustee still reads
-          requests, but nothing is sent until payouts resume.
+          Payouts paused by the {trust.paused.by}. Requests are still decided, but nothing is sent.
         </div>
       )}
 
@@ -139,7 +148,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           {role.kind === "beneficiary" && (
             <section className="mb-12">
               <h2 className="font-serif text-3xl">Ask the trustee</h2>
-              <p className="mt-1 text-muted">Say what it&apos;s for and paste your proof. You&apos;ll get an answer, and a reason, in about 20 seconds.</p>
+              <p className="mt-1 text-muted">Answer in about 20 seconds.</p>
               <AskForm
                 trustId={trust.id}
                 accessKey={key}
@@ -165,12 +174,8 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 <div className="max-w-md">
                   <h2 className="font-medium">{role.kind === "protector" ? "Your role as protector" : "Step in"}</h2>
                   <p className="mt-1 text-sm text-muted">
-                    {flagged.length > 0
-                      ? `${flagged.length} request${flagged.length > 1 ? "s" : ""} tried to override the wishes and ${flagged.length > 1 ? "were" : "was"} stopped. They're marked below.`
-                      : "No request has tried to override the wishes so far."}{" "}
-                    {trust.protectorEmail && emailConfigured()
-                      ? `The protector is emailed at ${trust.protectorEmail} when that happens.`
-                      : "Stopped requests are listed here for the protector to review."}
+                    {flagged.length > 0 ? `${flagged.length} stopped request${flagged.length > 1 ? "s" : ""}, marked below.` : "Nothing flagged."}
+                    {trust.protectorEmail && emailConfigured() ? ` Alerts go to ${trust.protectorEmail}.` : ""}
                   </p>
                 </div>
                 <PauseControl trustId={trust.id} accessKey={key} paused={Boolean(trust.paused)} />
@@ -187,7 +192,6 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           {role.kind === "settlor" && (
             <section className="mb-12">
               <ShareLinks
-                fresh={fresh === "1"}
                 links={[
                   { label: "You", note: "manage and fund", href: `/t/${trust.id}?k=${trust.settlorKey}` },
                   ...(trust.protectorKey
@@ -209,11 +213,17 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
 
           <section className="mt-12">
             <h2 className="font-serif text-3xl">Money in and out</h2>
-            <p className="mt-1 text-sm text-muted">Read straight from the chain. Every line links to Basescan.</p>
+            <p className="mt-1 text-sm text-muted">From the chain, with Basescan links.</p>
             <Suspense fallback={<ActivitySkeleton />}>
               <ActivitySection address={state.address} fromBlock={trust.fromBlock} requests={state.requests} labels={labels} />
             </Suspense>
           </section>
+
+          {(role.kind === "settlor" || role.kind === "legacy") && (
+            <section className="mt-16 border-t border-rule pt-6">
+              <DeleteTrust trustId={trust.id} accessKey={key} name={trust.name} balance={state.balance} />
+            </section>
+          )}
         </div>
 
         {/* ---------- The wishes ---------- */}
@@ -221,7 +231,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           <div className="card overflow-hidden">
             <div className="border-b border-rule bg-paper-2/60 px-5 py-4">
               <p className="eyebrow">The wishes</p>
-              <p className="text-sm text-muted">In {trust.settlor}&apos;s own words. The trustee follows them exactly.</p>
+              <p className="text-sm text-muted">Followed exactly.</p>
             </div>
             <div className="max-h-[52vh] overflow-y-auto px-5 py-4 font-serif leading-relaxed">
               {trust.deed.split("\n").filter(Boolean).map((line, i) => {

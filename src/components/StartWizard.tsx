@@ -202,7 +202,7 @@ export default function StartWizard({ network }: { network: string }) {
             {step === 0 && (
               <>
                 <h1 className="font-serif text-4xl sm:text-5xl">What should your money be for?</h1>
-                <p className="mt-3 text-lg text-muted">Write it the way you&apos;d explain it to a trusted friend. Or start from an example.</p>
+                <p className="mt-3 text-lg text-muted">In plain words, or start from an example.</p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   {Object.keys(TEMPLATES).map((k) => (
                     <button
@@ -239,9 +239,7 @@ export default function StartWizard({ network }: { network: string }) {
             {step === 1 && (
               <>
                 <h1 className="font-serif text-4xl sm:text-5xl">Let the trustee read them first.</h1>
-                <p className="mt-3 text-lg text-muted">
-                  Before any money goes in, it looks for gaps that would leave it unsure later, and shows how it will decide.
-                </p>
+                <p className="mt-3 text-lg text-muted">It flags gaps before any money goes in.</p>
                 {busy === "check" ? (
                   <Thinking steps={["Reading your wishes", "Looking for gaps", "Drawing how it will decide"]} />
                 ) : check ? (
@@ -295,9 +293,7 @@ export default function StartWizard({ network }: { network: string }) {
             {step === 2 && (
               <>
                 <h1 className="font-serif text-4xl sm:text-5xl">Who is the money for?</h1>
-                <p className="mt-3 text-lg text-muted">
-                  Each person gets a private link to ask the trustee. Payouts go only to the address you save here.
-                </p>
+                <p className="mt-3 text-lg text-muted">Payouts only ever go to these wallets.</p>
                 <div className="mt-8 grid gap-4">
                   <AnimatePresence initial={false}>
                     {people.map((p, i) => (
@@ -329,7 +325,7 @@ export default function StartWizard({ network }: { network: string }) {
                           </div>
                           {!p.wallet && (
                             <span className="mt-1 text-xs text-muted">
-                              Required. Paste {p.name || "their"} wallet address, or tap &quot;Use my wallet&quot; to use yours while testing.
+                              Required. Testing? Use your own.
                             </span>
                           )}
                         </Field>
@@ -358,20 +354,19 @@ export default function StartWizard({ network }: { network: string }) {
             {step === 3 && (
               <>
                 <h1 className="font-serif text-4xl sm:text-5xl">Set the safeguards.</h1>
-                <p className="mt-3 text-lg text-muted">Fixed rules the trustee can never break, and a person who can step in.</p>
+                <p className="mt-3 text-lg text-muted">Hard limits, and someone who can step in.</p>
                 <div className="mt-8 grid gap-4">
                   <div className="card p-5">
                     <Field label="Largest single payment ($)">
                       <input className="field" inputMode="decimal" value={perRequestMax} onChange={(e) => setPerRequestMax(e.target.value)} />
                     </Field>
-                    <p className="mt-2 text-xs text-muted">No single payment can be bigger than this, whatever the trustee decides.</p>
+                    <p className="mt-2 text-xs text-muted">A hard cap, whatever the AI decides.</p>
                   </div>
                   <div className="card grid gap-4 p-5 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                       <p className="font-medium">A protector (optional)</p>
                       <p className="text-sm text-muted">
-                        Someone you trust. They see requests that try to trick the trustee, and can pause every payout. They
-                        can&apos;t take money or change your wishes.
+                        Gets alerts and can pause payouts. Can&apos;t take money.
                       </p>
                     </div>
                     <Field label="Their name">
@@ -432,19 +427,16 @@ export default function StartWizard({ network }: { network: string }) {
                 </div>
                 <div className="card mt-4 flex flex-wrap items-center justify-between gap-4 p-5">
                   <div className="max-w-md">
-                    <p className="font-medium">Sign it with your wallet</p>
+                    <p className="font-medium">Sign with your wallet</p>
                     <p className="text-sm text-muted">
                       {connected
-                        ? `Your wallet ${shortAddress(connected)} will ask you to sign these exact terms. Signing is free and moves no money.`
-                        : "Connect a wallet to sign these terms as the settlor. Signing is free and moves no money."}
+                        ? "Free. Moves no money."
+                        : "Connect a wallet to sign. Free, moves no money."}
                     </p>
                   </div>
                   <WalletChip network={network} />
                 </div>
-                <p className="mt-4 text-sm text-muted">
-                  Next you&apos;ll get a private link for yourself and one for each person. Keep yours safe: it&apos;s the only way
-                  back in.
-                </p>
+
               </>
             )}
           </motion.section>

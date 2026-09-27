@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DeletedNotice from "@/components/DeletedNotice";
 import Headline from "@/components/home/Headline";
 import HeroDemo from "@/components/home/HeroDemo";
 import Locks from "@/components/home/Locks";
@@ -11,23 +12,24 @@ const EXAMPLES = [
   {
     template: "Education fund",
     title: "School fees, not phones",
-    quote: "Pay my daughter's school fees straight to the school when an invoice arrives. No gadgets unless the school requires them.",
+    quote: "Pay school fees when an invoice arrives. No gadgets.",
   },
   {
     template: "Support for my parents",
     title: "Care for my parents",
-    quote: "Up to $1,200 a year for my mother's medical bills, with the bill attached. Groceries up to $60 a month.",
+    quote: "Medical bills up to $1,200 a year. Groceries $60 a month.",
   },
   {
     template: "Lock for future me",
     title: "Lock it from future me",
-    quote: "I can't touch this until December, except for a real medical emergency or to avoid eviction.",
+    quote: "Locked until December, except emergencies.",
   },
 ];
 
 export default function Home() {
   return (
     <div className="overflow-x-clip">
+      <DeletedNotice />
       {/* ---------- Hero ---------- */}
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-20 sm:px-6 md:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <div>
@@ -42,8 +44,7 @@ export default function Home() {
           />
           <Reveal delay={0.6}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-              Write how your money should be used, in plain words. Deed turns it into a trust: an AI trustee holds the
-              money and pays out only what your wishes allow, only to the people you named.
+              Write how your money should be used. An AI trustee holds it and pays only what your wishes allow.
             </p>
           </Reveal>
           <Reveal delay={0.75}>
@@ -56,7 +57,7 @@ export default function Home() {
                 See how it decides
               </a>
             </div>
-            <p className="mt-5 text-xs text-muted">Five minutes to set up · no lawyer · runs on test money while you try it</p>
+            <p className="mt-5 text-xs text-muted">5 minutes · no lawyer · free test money</p>
           </Reveal>
         </div>
         <Reveal delay={0.3} y={40}>
@@ -83,7 +84,7 @@ export default function Home() {
         <p className="eyebrow mb-6">Why Deed</p>
         <ScrollText
           className="font-serif text-3xl leading-[1.25] sm:text-4xl md:text-5xl"
-          text="Wealthy families have always used trusts to make sure money is spent the way they meant: school fees, not phones. Setting one up costs thousands, so almost nobody has one. *Deed gives anyone the same promise in five minutes."
+          text="Trusts make sure money is spent the way you meant. They cost thousands, so few people have one. *Deed makes one in five minutes."
         />
       </section>
 
@@ -91,7 +92,7 @@ export default function Home() {
       <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 pb-24 sm:px-6">
         <Reveal>
           <p className="eyebrow">How it works</p>
-          <h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">From a few sentences to a trustee that never forgets.</h2>
+          <h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">Four steps. No lawyer.</h2>
         </Reveal>
         <div className="mt-10">
           <Story />
@@ -104,10 +105,7 @@ export default function Home() {
           <Reveal>
             <p className="eyebrow">Safeguards</p>
             <h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">Two locks on every payment.</h2>
-            <p className="mt-4 max-w-2xl text-lg text-muted">
-              The trustee reasons about your wishes. Then fixed rules, written in code, check the result. The rules can
-              lower an amount or turn a yes into a no. They can never make it looser.
-            </p>
+            <p className="mt-4 max-w-2xl text-lg text-muted">The AI decides. Fixed rules check it. Rules can only make it stricter.</p>
           </Reveal>
           <div className="mt-12">
             <Locks />
@@ -119,11 +117,10 @@ export default function Home() {
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-24 sm:px-6 md:grid-cols-2 md:py-32">
         <Reveal>
           <p className="eyebrow">The protector</p>
-          <h2 className="mt-3 font-serif text-4xl sm:text-5xl">A person you trust can always step in.</h2>
+          <h2 className="mt-3 font-serif text-4xl sm:text-5xl">A person you trust can step in.</h2>
           <p className="mt-4 text-lg text-muted">
-            Name a sister, a friend or a lawyer as protector. If someone tries to talk the trustee out of your wishes, the
-            request is stopped and the protector is told. One tap pauses every payout. They can&apos;t take the money or
-            change your wishes; they&apos;re a brake, not an owner.
+            Trick requests are stopped and your protector is alerted. One tap pauses every payout. They can&apos;t take the
+            money.
           </p>
         </Reveal>
         <Reveal delay={0.15}>
@@ -163,9 +160,7 @@ export default function Home() {
             <h2 className="relative mx-auto max-w-3xl font-serif text-4xl sm:text-6xl">
               Write your wishes. <span className="italic">We&apos;ll keep them.</span>
             </h2>
-            <p className="relative mx-auto mt-5 max-w-xl text-paper/70">
-              Try it now on Base&apos;s test network with free test dollars. Nothing to install.
-            </p>
+            <p className="relative mx-auto mt-5 max-w-xl text-paper/70">Free test money. Nothing to install.</p>
             <Link href="/start" className="btn-seal relative mt-8 px-7 py-4 text-base">
               Start a trust <span aria-hidden>→</span>
             </Link>
