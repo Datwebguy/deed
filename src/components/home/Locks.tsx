@@ -5,6 +5,8 @@ import { useRef } from "react";
 
 // Two locks on every payment, played out on one real-looking request.
 const RULES = [
+  ["Quoted clause is in the wishes", "word for word"],
+  ["The 3 runs agree", "3 of 3"],
   ["Not more than asked", "$300 asked"],
   ["Single payment limit", "$250 max · lowered"],
   ["Ada's yearly limit", "$3,580 left"],
@@ -27,7 +29,7 @@ export default function Locks() {
         transition={{ duration: 0.7 }}
         className="card p-6"
       >
-        <p className="eyebrow">Lock 1 · AI reasoning</p>
+        <p className="eyebrow">Lock 1 · AI, decided 3 times</p>
         <p className="mt-4 text-sm text-muted">Example: Ada asks $300 for uniforms and books.</p>
         <p className="mt-4 border-l-2 border-gold pl-3 font-serif text-lg italic">
           “Books, uniforms and exam fees: up to $300 per school year, with a receipt.”
@@ -36,6 +38,13 @@ export default function Locks() {
           <li>The receipt matches the school&apos;s list.</li>
           <li>Nothing has been spent on books this year.</li>
         </ul>
+        <div className="mt-4 flex gap-2 text-xs">
+          {["Run 1 · $300", "Run 2 · $300", "Run 3 · $300"].map((r) => (
+            <span key={r} className="chip">
+              {r}
+            </span>
+          ))}
+        </div>
         <p className="mt-5 flex items-center justify-between rounded-xl bg-paper-2 px-4 py-3">
           <span className="text-sm text-muted">Trustee says</span>
           <span className="font-serif text-2xl">Pay $300</span>
@@ -101,6 +110,7 @@ export default function Locks() {
           <span className="text-sm">Sent to Ada</span>
           <span className="font-serif text-2xl">$250</span>
         </motion.p>
+        <p className="mt-3 text-xs text-muted">If any check fails, the payment waits for a person to approve it.</p>
       </motion.div>
     </div>
   );

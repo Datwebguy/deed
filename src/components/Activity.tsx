@@ -28,7 +28,9 @@ export default function Activity({
   return (
     <div className="mt-4">
       {error && (
-        <p className="mb-2 text-xs text-muted">Showing the trustee&apos;s payouts only; the full history couldn&apos;t be read from the network.</p>
+        <p className="mb-2 text-xs text-muted">
+          {error === "no wallet" ? "Recorded payouts." : "Recorded payouts only; the chain couldn't be read just now."}
+        </p>
       )}
       {rows.length === 0 ? (
         <div className="card px-6 py-10 text-center text-muted">No money has moved yet.</div>

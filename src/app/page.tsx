@@ -104,7 +104,9 @@ export default function Home() {
           <Reveal>
             <p className="eyebrow">Safeguards</p>
             <h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">Two locks on every payment.</h2>
-            <p className="mt-4 max-w-2xl text-lg text-muted">The AI decides. Fixed rules check it. Rules can only make it stricter.</p>
+            <p className="mt-4 max-w-2xl text-lg text-muted">
+              The AI decides three times. Code checks its quote and every limit. Anything unsure goes to a person.
+            </p>
           </Reveal>
           <div className="mt-12">
             <Locks />
@@ -118,8 +120,8 @@ export default function Home() {
           <p className="eyebrow">The protector</p>
           <h2 className="mt-3 font-serif text-4xl sm:text-5xl">A person you trust can step in.</h2>
           <p className="mt-4 text-lg text-muted">
-            Trick requests are stopped and your protector is alerted. One tap pauses every payout. They can&apos;t take the
-            money.
+            Unsure payments wait for their approval. Tricks are stopped and they&apos;re alerted. One tap pauses everything.
+            They can&apos;t take the money.
           </p>
         </Reveal>
         <Reveal delay={0.15}>

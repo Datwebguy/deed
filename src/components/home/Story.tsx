@@ -10,8 +10,8 @@ import CountUp from "@/components/ui/CountUp";
 
 const STEPS = [
   {
-    title: "Write your wishes",
-    body: "Who it's for, what it may pay for, what it may not.",
+    title: "Write and sign",
+    body: "Your wishes in plain words, signed with your wallet.",
   },
   {
     title: "The trustee checks them",
@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     title: "People ask. It decides.",
-    body: "Pay, pay part, ask for proof, or no. Always with a reason.",
+    body: "Decided 3 times, checked in code. Unsure? A person reviews.",
   },
 ];
 
