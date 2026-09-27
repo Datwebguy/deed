@@ -17,6 +17,7 @@ export async function GET() {
     reasoning: servConfigured(),
     walletKeys: walletConfigured(),
     network: NETWORK,
+    runtime: process.version,
     walletReachable: Boolean(wallet),
     walletError,
     storage: process.env.BLOB_READ_WRITE_TOKEN ? "private-blob" : "local-files",
