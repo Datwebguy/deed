@@ -11,19 +11,19 @@ import CountUp from "@/components/ui/CountUp";
 const STEPS = [
   {
     title: "Write your wishes",
-    body: "In your own words: who the money is for, what it may pay for, and what it may not. No lawyer, no forms.",
+    body: "Who it's for, what it may pay for, what it may not.",
   },
   {
     title: "The trustee checks them",
-    body: "Before a cent goes in, it points out the gaps a court would argue about for years, and draws how it will decide.",
+    body: "It flags gaps before any money goes in.",
   },
   {
     title: "Fund the trust",
-    body: "Dollars (USDC) go into the trust's own wallet on Base. Pay with Base on any phone, with a passkey. Only the trustee can pay out.",
+    body: "Send USDC with a passkey. Only the trustee can pay out.",
   },
   {
-    title: "People ask. The trustee decides.",
-    body: "Each request is read against your wishes. It pays, pays part, asks for proof, or says no, and always says why.",
+    title: "People ask. It decides.",
+    body: "Pay, pay part, ask for proof, or no. Always with a reason.",
   },
 ];
 
@@ -148,7 +148,7 @@ const WISHES = [
 function WishesVisual() {
   return (
     <div className="flex h-full flex-col">
-      <p className="eyebrow">The wishes · in Ebere&apos;s words</p>
+      <p className="eyebrow">Example · the wishes</p>
       <div className="mt-5 grid gap-3 font-serif text-lg leading-snug">
         {WISHES.map((line, i) => (
           <motion.p
@@ -181,7 +181,7 @@ const GAPS = [
 function CheckVisual() {
   return (
     <div className="flex h-full flex-col">
-      <p className="eyebrow">2 gaps found · before any money goes in</p>
+      <p className="eyebrow">Example · 2 gaps found</p>
       <div className="mt-5 grid gap-3">
         {GAPS.map(([q, a], i) => (
           <motion.div
@@ -250,7 +250,7 @@ function CheckVisual() {
 function FundVisual() {
   return (
     <div className="flex h-full flex-col">
-      <p className="eyebrow">Held in trust</p>
+      <p className="eyebrow">Example · held in trust</p>
       <p className="mt-3 font-serif text-6xl">
         <CountUp value={4210} prefix="$" duration={1.8} />
       </p>
@@ -293,7 +293,7 @@ const REQUESTS = [
 function DecideVisual() {
   return (
     <div className="flex h-full flex-col">
-      <p className="eyebrow">Every decision, with its reason</p>
+      <p className="eyebrow">Example · decisions</p>
       <div className="mt-5 grid gap-3">
         {REQUESTS.map(([label, verdict, tone], i) => (
           <motion.div

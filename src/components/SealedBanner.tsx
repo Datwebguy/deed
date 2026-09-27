@@ -22,9 +22,7 @@ export default function SealedBanner({ name }: { name: string }) {
       </motion.span>
       <div>
         <p className="font-serif text-2xl">{name} is sealed.</p>
-        <p className="text-sm text-muted">
-          Save this page: it&apos;s your private settlor link. Then add money and send each person their link below.
-        </p>
+        <p className="text-sm text-muted">Bookmark this page. It&apos;s your private link.</p>
       </div>
     </motion.div>
   );

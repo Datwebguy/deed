@@ -6,7 +6,7 @@ type Link = { label: string; note: string; href: string };
 
 // The settlor's list of private links. Each one only works for that person;
 // anyone else on the trust's plain address can only read it.
-export default function ShareLinks({ links, fresh }: { links: Link[]; fresh: boolean }) {
+export default function ShareLinks({ links }: { links: Link[] }) {
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState("");
 
@@ -29,10 +29,7 @@ export default function ShareLinks({ links, fresh }: { links: Link[]; fresh: boo
   return (
     <div className="card p-5">
       <h3 className="font-medium">Private links</h3>
-      <p className="mt-1 text-sm text-muted">
-        {fresh ? "Your trust is ready. " : ""}Send each person their own link. Only that link lets them ask the trustee as
-        themselves. Keep <strong>your</strong> link safe: it&apos;s the only way back in to manage this trust.
-      </p>
+      <p className="mt-1 text-sm text-muted">One per person. Keep yours safe.</p>
       <ul className="mt-3 grid gap-2">
         {links.map((l) => {
           const url = `${origin}${l.href}`;

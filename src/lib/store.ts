@@ -11,6 +11,7 @@ interface Backend {
   put<T>(key: string, value: T): Promise<void>;
   // Documents directly inside a folder (not in its subfolders).
   list<T>(folder: string): Promise<T[]>;
+  remove(keys: string[]): Promise<void>;
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -38,6 +39,9 @@ const fileStore: Backend = {
     } catch {
       return [];
     }
+  },
+  async remove(keys) {
+    await Promise.all(keys.map((k) => fs.rm(path.join(DATA_DIR, `${k}.json`), { force: true })));
   },
 };
 
@@ -78,6 +82,11 @@ const blobStore: Backend = {
     const items = await Promise.all(found.map((p) => readBlob(p).catch(() => null)));
     return items.filter(Boolean);
   },
+  async remove(keys) {
+    if (keys.length === 0) return;
+    const { del } = await import("@vercel/blob");
+    await del(keys.map((k) => `${k}.json`));
+  },
 };
 
 const db: Backend = process.env.BLOB_READ_WRITE_TOKEN ? blobStore : fileStore;
@@ -97,6 +106,15 @@ export async function listRequests(t: Pick<Trust, "id" | "createdAt">) {
     t.createdAt < FOLDERS_SINCE ? db.list<TrustRequest>("requests") : Promise.resolve([]),
   ]);
   return [...own, ...loose.filter((r) => r.trustId === t.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+// Deletes a trust and every request made to it. Cannot be undone.
+export async function deleteTrust(t: Pick<Trust, "id" | "createdAt">) {
+  const requests = await listRequests(t);
+  await db.remove([
+    ...requests.flatMap((r) => [`requests/${t.id}/${r.id}`, `requests/${r.id}`]),
+    `trusts/${t.id}`,
+  ]);
 }
 
 export const newId = () => Math.random().toString(36).slice(2, 10);

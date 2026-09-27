@@ -97,10 +97,7 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
   return (
     <div className="card p-5">
       <h3 className="font-medium">Add money</h3>
-      <p className="mt-1 text-sm text-muted">
-        Dollars (USDC) go into the trust&apos;s own wallet. Once they&apos;re in, only the trustee can pay them out, and only
-        to the people you named.
-      </p>
+      <p className="mt-1 text-sm text-muted">USDC into the trust&apos;s wallet. Only the trustee can pay it out.</p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-[10rem_1fr]">
         <input
@@ -115,10 +112,7 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
           Pay with Base
         </button>
       </div>
-      <p className="mt-2 text-xs text-muted">
-        Works in any browser, on any phone: sign in with a passkey (face or fingerprint), no app needed. Network fees are
-        covered.
-      </p>
+      <p className="mt-2 text-xs text-muted">Any phone, with a passkey. Fees covered.</p>
 
       {env.injected ? (
         <button className="btn-ghost mt-3 w-full justify-center text-sm sm:w-fit" disabled={busy} onClick={payInjected} type="button">
@@ -127,7 +121,7 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
       ) : (
         env.mobile && (
           <div className="mt-4 text-sm">
-            <p className="text-muted">Already use a wallet app? Open this page inside it:</p>
+            <p className="text-muted">Or open in your wallet app:</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {walletAppLinks(env.url).map((l) => (
                 <a key={l.name} className="btn-ghost text-xs" href={l.href}>
@@ -140,9 +134,9 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
       )}
 
       <details className="mt-4 text-sm">
-        <summary className="cursor-pointer text-muted">Or send from anywhere to the trust&apos;s address</summary>
+        <summary className="cursor-pointer text-muted">Send to the address instead</summary>
         <p className="mt-2 text-xs text-muted">
-          USDC on {testnet ? "Base Sepolia (test network)" : "Base"} only. Other tokens or networks will be lost.
+          USDC on {testnet ? "Base Sepolia" : "Base"} only.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <code className="break-all rounded bg-rule/40 px-2 py-1 text-xs">{address}</code>
@@ -154,13 +148,13 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
 
       {testnet && (
         <div className="mt-4 border-t border-rule pt-4 text-sm">
-          <p className="text-muted">Testing? These use free test money:</p>
+          <p className="text-muted">Free test money:</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button className="btn-ghost text-xs" disabled={busy} onClick={faucet} type="button">
-              Send free test USDC to this trust
+              To this trust
             </button>
             <a className="btn-ghost text-xs" href="https://faucet.circle.com" target="_blank" rel="noreferrer">
-              Get test USDC for your own wallet
+              To your wallet
             </a>
           </div>
         </div>

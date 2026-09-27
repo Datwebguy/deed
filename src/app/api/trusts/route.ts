@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isAddress } from "viem";
+import { isAddress, type Address, type Hex } from "viem";
+import { deedMessage } from "@/lib/deed-message";
 import { newKey } from "@/lib/access";
 import { newId, saveTrust } from "@/lib/store";
-import { currentBlock, trustAddress } from "@/lib/wallet";
+import { currentBlock, publicClient, trustAddress } from "@/lib/wallet";
 import type { Trust } from "@/lib/types";
 
 const Body = z.object({
@@ -19,14 +20,21 @@ const Body = z.object({
       z.object({
         name: z.string().min(1).max(60),
         relation: z.string().max(60).default(""),
-        wallet: z.string().optional(),
+        wallet: z.string().refine((a) => isAddress(a), "wallet"),
         yearlyCap: z.coerce.number().positive(),
       }),
     )
     .min(1)
     .max(10),
   check: z.any().optional(),
+  // The settlor's wallet signature over the exact terms (see deed-message).
+  settlorAddress: z.string().refine((a) => isAddress(a)),
+  signature: z.string().regex(/^0x[0-9a-fA-F]+$/),
+  issuedAt: z.string().datetime(),
 });
+
+// A signature is only accepted for a few minutes after it was made.
+const SIGNATURE_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json());
@@ -38,14 +46,36 @@ export async function POST(req: Request) {
       deed: "Write at least a few sentences of wishes.",
       perRequestMax: "Set the largest single payment.",
       protectorEmail: "The protector's email doesn't look right.",
-      beneficiaries: "Each person needs a name and a yearly limit above zero.",
+      beneficiaries: "Each person needs a name, a payout wallet and a yearly limit above zero.",
+      settlorAddress: "Connect your wallet and sign to create the trust.",
+      signature: "Connect your wallet and sign to create the trust.",
+      issuedAt: "Sign again to create the trust.",
     };
     return NextResponse.json({ error: hint[field] ?? "Some details are missing or not valid." }, { status: 400 });
   }
   const b = parsed.data;
-  for (const p of b.beneficiaries)
-    if (p.wallet && !isAddress(p.wallet))
-      return NextResponse.json({ error: `The payout address for ${p.name} doesn't look right.` }, { status: 400 });
+  // Only create the trust if the settlor's wallet signed these exact terms.
+  const age = Date.now() - Date.parse(b.issuedAt);
+  if (!(age >= -60_000 && age < SIGNATURE_WINDOW_MS))
+    return NextResponse.json({ error: "That signature has expired. Sign again to create the trust." }, { status: 400 });
+  const message = deedMessage({
+    name: b.name,
+    settlor: b.settlor,
+    deed: b.deed,
+    perRequestMax: b.perRequestMax,
+    protector: b.protector || undefined,
+    beneficiaries: b.beneficiaries,
+    issuedAt: b.issuedAt,
+  });
+  let valid = false;
+  try {
+    // Works for ordinary wallets and for smart wallets such as Base Account.
+    valid = await publicClient.verifyMessage({ address: b.settlorAddress as Address, message, signature: b.signature as Hex });
+  } catch {
+    return NextResponse.json({ error: "Couldn't check your signature right now. Try again in a moment." }, { status: 502 });
+  }
+  if (!valid) return NextResponse.json({ error: "The signature doesn't match these terms. Sign again." }, { status: 400 });
+
   const trust: Trust = {
     id: newId(),
     name: b.name,
@@ -57,7 +87,10 @@ export async function POST(req: Request) {
     deed: b.deed,
     perRequestMax: b.perRequestMax,
     liquidBuffer: b.liquidBuffer,
-    beneficiaries: b.beneficiaries.map((p) => ({ ...p, id: newId(), key: newKey(), wallet: p.wallet || undefined })),
+    beneficiaries: b.beneficiaries.map((p) => ({ ...p, id: newId(), key: newKey() })),
+    settlorAddress: b.settlorAddress,
+    settlorSignature: b.signature,
+    signedAt: b.issuedAt,
     check: b.check,
     createdAt: new Date().toISOString(),
   };
