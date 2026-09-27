@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f4efe4;
+  --card: #fbf8f1;
+  --ink: #1b1a17;
+  --muted: #6b665c;
+  --rule: #d9d0bd;
+  --seal: #8f2d1f;
+  --leaf: #2f6b45;
+  --amber: #9a6a12;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #15140f;
+    --card: #1d1b16;
+    --ink: #ece6d8;
+    --muted: #a39c8d;
+    --rule: #37332a;
+    --seal: #d8664f;
+    --leaf: #6fbf8a;
+    --amber: #d9a441;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-seal: var(--seal);
+  --color-leaf: var(--leaf);
+  --color-amber: var(--amber);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  color: var(--ink);
+}
+.field:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 6px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 500;
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+.btn-ghost {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+}
