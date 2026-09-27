@@ -22,7 +22,7 @@ import { spentThisYear } from "@/lib/rules";
 import { getTrust } from "@/lib/store";
 import { trustState } from "@/lib/trust-state";
 import { verdictOf } from "@/lib/verdict";
-import { NETWORK, explorerAddress, explorerOf, isTestnet, netOf, usdcOf } from "@/lib/wallet";
+import { explorerAddress, explorerOf, isTestnet, netOf, usdcOf } from "@/lib/wallet";
 
 export const dynamic = "force-dynamic";
 
@@ -330,23 +330,24 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 })}
             </div>
             {trust.settlorAddress && (
-              <p className="flex items-center gap-2 border-t border-rule px-5 py-3 text-xs text-muted">
-                <span className="grid size-4 place-items-center rounded-full bg-leaf text-[9px] text-paper">✓</span>
-                Signed by {trust.settlor}&apos;s wallet{" "}
-                <a
-                  className="font-mono hover:text-ink"
-                  href={explorerAddress(trust.settlorAddress, NETWORK)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {trust.settlorAddress.slice(0, 6)}…{trust.settlorAddress.slice(-4)}
-                </a>
-                {trust.signedAt && (
-                  <span>
-                    · {new Date(trust.signedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </span>
-                )}
-              </p>
+              <div className="flex items-start gap-2.5 border-t border-rule px-5 py-3 text-xs text-muted">
+                <span className="mt-px grid size-4 shrink-0 place-items-center rounded-full bg-leaf text-[9px] text-paper">✓</span>
+                <div className="min-w-0">
+                  <p>Signed by {trust.settlor}&apos;s wallet</p>
+                  <p className="mt-0.5">
+                    <a
+                      className="font-mono hover:text-ink"
+                      href={explorerAddress(trust.settlorAddress, net)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {trust.settlorAddress.slice(0, 6)}…{trust.settlorAddress.slice(-4)}
+                    </a>
+                    {trust.signedAt &&
+                      ` · ${new Date(trust.signedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
+                  </p>
+                </div>
+              </div>
             )}
             <div className="gold-rule" />
             <div className="grid gap-3 px-5 py-4 text-sm">
