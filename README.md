@@ -26,6 +26,13 @@ The settlor's wishes **are** the system prompt. SERV compiles them once into a b
 
 Payouts are USDC transfers from the trust's own **Coinbase AgentKit** wallet (`CdpEvmWalletProvider`, one CDP server account per trust, `src/lib/wallet.ts`). Balances are read from chain; nothing is simulated.
 
+## Money flow
+
+- **Funding:** on the trust page the settlor connects their own wallet (Coinbase Wallet, MetaMask, Rabby: any injected wallet), which is switched to Base, and sends USDC straight to the trust's address (`src/components/FundPanel.tsx`). On the test network, "Get free test USDC" asks Coinbase's CDP faucet to fund the trust (`/api/trusts/[id]/faucet`).
+- **Payouts:** after both locks pass, the trustee sends USDC from the trust's wallet to the saved address. On Base Sepolia the wallet tops itself up with faucet ETH for network fees; on Base mainnet it needs a little ETH sent to it once.
+- **History:** "Money in and out" lists every USDC transfer to and from the trust's wallet, read from chain logs since the trust was created, with Basescan links.
+- **Payout addresses:** "Use my wallet" fills a beneficiary's address from the connected wallet.
+
 ## Run it
 
 ```bash
@@ -38,6 +45,8 @@ npm run dev
 - CDP keys: portal.cdp.coinbase.com (API key id, secret, and wallet secret).
 - `TRUST_NETWORK` defaults to `base-sepolia`. Fund a trust by sending test USDC to the address shown on its page.
 - Records are JSON files in `data/` locally, or Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set.
+- `/api/health` shows what is connected: SERV key, CDP keys, whether the wallet opens, gas balance, and whether the chain RPC answers.
+- The public Base RPC is rate limited. For a demo, set `BASE_RPC_URL` to a dedicated endpoint (the history reads chain logs in 9,000-block windows; set `LOGS_WINDOW` lower if your provider caps ranges).
 
 ## Status
 
@@ -46,7 +55,8 @@ npm run dev
 | Wishes check (gaps + decision flowchart) | Live, SERV |
 | Request decisions | Live, SERV |
 | Fixed rules | Live |
-| USDC payouts via AgentKit | Live on Base Sepolia; Base mainnet by setting `TRUST_NETWORK=base` |
+| USDC payouts via AgentKit | Live on Base Sepolia (gas auto-topped from faucet); Base mainnet by setting `TRUST_NETWORK=base` |
+| Funding from a connected wallet, test faucet, on-chain history | Live |
 | Idle money into IXS vaults | Next |
 | Payouts to bank accounts (Paycrest) | Roadmap, needs business verification |
 

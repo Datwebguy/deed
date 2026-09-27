@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Flowchart from "@/components/Flowchart";
+import { currentAccount } from "@/lib/browser-wallet";
 import type { DeedCheck } from "@/lib/types";
 
 type Person = { name: string; relation: string; wallet: string; yearlyCap: string };
@@ -69,6 +70,15 @@ export default function Start() {
 
   const setPerson = (i: number, patch: Partial<Person>) =>
     setPeople((ps) => ps.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+
+  async function fillFromMyWallet(i: number) {
+    setError("");
+    try {
+      setPerson(i, { wallet: await currentAccount() });
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   async function runCheck() {
     setBusy("check");
@@ -183,14 +193,17 @@ export default function Start() {
           <div key={i} className="card grid gap-3 p-4 md:grid-cols-4">
             <input className="field" placeholder="Name" value={p.name} onChange={(e) => setPerson(i, { name: e.target.value })} />
             <input className="field" placeholder="Relation" value={p.relation} onChange={(e) => setPerson(i, { relation: e.target.value })} />
-            <label className="grid gap-1 md:col-span-2">
+            <div className="flex gap-2 md:col-span-2">
               <input
                 className="field"
                 placeholder="Their wallet address for payouts (0x…)"
                 value={p.wallet}
                 onChange={(e) => setPerson(i, { wallet: e.target.value.trim() })}
               />
-            </label>
+              <button className="btn-ghost shrink-0 text-xs" type="button" onClick={() => fillFromMyWallet(i)}>
+                Use my wallet
+              </button>
+            </div>
             <label className="grid gap-1 md:col-span-2">
               <span className="text-xs text-muted">Most they can receive in a year ($)</span>
               <input className="field" inputMode="decimal" value={p.yearlyCap} onChange={(e) => setPerson(i, { yearlyCap: e.target.value })} />

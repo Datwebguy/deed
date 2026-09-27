@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import Flowchart from "@/components/Flowchart";
 import AskForm from "@/components/AskForm";
 import Decisions from "@/components/Decisions";
+import FundPanel from "@/components/FundPanel";
+import Activity from "@/components/Activity";
 import { getTrust } from "@/lib/store";
 import { spentThisYear } from "@/lib/rules";
 import { trustState } from "@/lib/trust-state";
-import { NETWORK, explorerAddress } from "@/lib/wallet";
+import { EXPLORER, NETWORK, TESTNET, USDC, explorerAddress } from "@/lib/wallet";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +15,10 @@ export default async function TrustPage({ params }: PageProps<"/t/[id]">) {
   const { id } = await params;
   const trust = await getTrust(id);
   if (!trust) notFound();
-  const state = await trustState(trust);
+  const state = await trustState(trust, { history: true });
   const names = Object.fromEntries(trust.beneficiaries.map((b) => [b.id, b.name]));
+  const labels: Record<string, string> = { ...names };
+  for (const b of trust.beneficiaries) if (b.wallet) labels[b.wallet.toLowerCase()] = b.name;
   const paidTotal = state.requests.reduce((s, r) => s + (r.paid || 0), 0);
 
   return (
@@ -28,13 +32,20 @@ export default async function TrustPage({ params }: PageProps<"/t/[id]">) {
           <p className="mt-1 font-serif text-3xl">${state.balance.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
           {state.address ? (
             <p className="mt-2 text-xs text-muted break-all">
-              To add money, send USDC on {NETWORK === "base" ? "Base" : "Base test network"} to{" "}
-              <a className="underline" href={explorerAddress(state.address)} target="_blank">
+              Trust wallet on {TESTNET ? "Base Sepolia" : "Base"}:{" "}
+              <a className="underline" href={explorerAddress(state.address)} target="_blank" rel="noreferrer">
                 {state.address}
               </a>
+              {!TESTNET && state.gas < 0.00001 && (
+                <span className="mt-1 block text-seal">Needs a little ETH for network fees before it can pay anyone.</span>
+              )}
             </p>
           ) : (
-            <p className="mt-2 text-xs text-seal">The trust&apos;s wallet isn&apos;t connected yet, so nothing can be paid out.</p>
+            <p className="mt-2 text-xs text-seal">
+              {state.walletError
+                ? `The trust's wallet couldn't be reached: ${state.walletError}`
+                : "The trust's wallet isn't connected yet, so nothing can be paid out."}
+            </p>
           )}
         </div>
         <div className="card p-5">
@@ -51,6 +62,18 @@ export default async function TrustPage({ params }: PageProps<"/t/[id]">) {
 
       <div className="mt-10 grid gap-8 md:grid-cols-5">
         <div className="md:col-span-3">
+          {state.address && (
+            <div className="mb-10">
+              <FundPanel
+                trustId={trust.id}
+                address={state.address}
+                network={NETWORK}
+                usdc={USDC}
+                testnet={TESTNET}
+                explorer={EXPLORER}
+              />
+            </div>
+          )}
           <h2 className="font-serif text-2xl">Ask the trustee</h2>
           <AskForm
             trustId={trust.id}
@@ -62,6 +85,8 @@ export default async function TrustPage({ params }: PageProps<"/t/[id]">) {
           />
           <h2 className="mt-12 font-serif text-2xl">Every decision</h2>
           <Decisions requests={state.requests} names={names} />
+          <h2 className="mt-12 font-serif text-2xl">Money in and out</h2>
+          <Activity transfers={state.transfers} requests={state.requests} labels={labels} error={state.historyError} />
         </div>
         <aside className="md:col-span-2">
           <h2 className="font-serif text-2xl">The wishes</h2>
