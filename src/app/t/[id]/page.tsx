@@ -10,6 +10,7 @@ import SealedBanner from "@/components/SealedBanner";
 import ShareLinks from "@/components/ShareLinks";
 import CountUp from "@/components/ui/CountUp";
 import DeleteTrust from "@/components/DeleteTrust";
+import DecisionPath from "@/components/DecisionPath";
 import DemoBar from "@/components/DemoBar";
 import Seal from "@/components/ui/Seal";
 import Link from "next/link";
@@ -272,6 +273,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           {/* ---------- Record ---------- */}
           <section>
             <h2 className="font-serif text-3xl">{role.kind === "beneficiary" ? "Your requests" : "Every decision"}</h2>
+            <DecisionPath />
             <Decisions
               requests={shown}
               names={names}

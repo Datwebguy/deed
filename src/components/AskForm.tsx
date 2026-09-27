@@ -31,12 +31,7 @@ const EXAMPLES = [
   },
 ];
 
-const STAGES = [
-  "Reading your request",
-  "Finding the clause in the wishes",
-  "Checking the fixed rules",
-  "Sending the payment",
-];
+const STAGES = ["Reading your request", "Deciding 3 times", "Checking the clause and limits", "Sending the payment"];
 
 // With an accessKey the form is locked to the one person whose link it is.
 export default function AskForm({

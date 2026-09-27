@@ -19,7 +19,7 @@ export default async function ActivitySection({
   let transfers: Transfer[] = [];
   let error: string | undefined;
   // Without a readable wallet, fall back to the payouts the trustee recorded.
-  if (!address) error = "wallet not connected";
+  if (!address) error = "no wallet";
   else {
     try {
       transfers = await usdcTransfers(address, fromBlock);

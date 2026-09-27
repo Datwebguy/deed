@@ -44,7 +44,7 @@ const SCENES: Scene[] = [
   },
 ];
 
-const STEPS = ["Reading the request", "Finding the clause", "Checking the fixed rules"];
+const STEPS = ["Deciding 3 times", "Checking the clause", "Checking the limits"];
 const TONE = {
   paid: "text-leaf bg-leaf-soft",
   declined: "text-seal bg-seal-soft",
