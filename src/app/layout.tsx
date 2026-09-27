@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import Seal from "@/components/ui/Seal";
+import WalletChip from "@/components/WalletChip";
+import { NETWORK } from "@/lib/wallet";
 import "./globals.css";
 
 const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], axes: ["opsz", "SOFT"], style: ["normal", "italic"] });
@@ -37,9 +39,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/#locks" className="hidden rounded-full px-3 py-2 text-muted transition hover:text-ink sm:block">
                 Safeguards
               </Link>
-              <Link href="/start" className="btn ml-1 !px-4 !py-2 text-sm">
-                Start a trust
-              </Link>
+              <WalletChip network={NETWORK} />
+              <span className="ml-1 hidden sm:inline">
+                <Link href="/start" className="btn !px-4 !py-2 text-sm">
+                  Start a trust
+                </Link>
+              </span>
             </nav>
           </div>
         </header>

@@ -238,6 +238,16 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 );
               })}
             </div>
+            {trust.settlorAddress && (
+              <p className="flex items-center gap-2 border-t border-rule px-5 py-3 text-xs text-muted">
+                <span className="grid size-4 place-items-center rounded-full bg-leaf text-[9px] text-paper">✓</span>
+                Signed by {trust.settlor}&apos;s wallet{" "}
+                <a className="font-mono hover:text-ink" href={explorerAddress(trust.settlorAddress)} target="_blank" rel="noreferrer">
+                  {trust.settlorAddress.slice(0, 6)}…{trust.settlorAddress.slice(-4)}
+                </a>
+                {trust.signedAt && <span>· {new Date(trust.signedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
+              </p>
+            )}
             <div className="gold-rule" />
             <div className="grid gap-3 px-5 py-4 text-sm">
               {trust.beneficiaries.map((b) => {

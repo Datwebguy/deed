@@ -76,11 +76,72 @@ export async function connect(network: string, via: "injected" | "base") {
   return { wallet, account: account as Address, chain, reader: createPublicClient({ chain, transport: http() }) };
 }
 
-// Just the address, from whichever wallet is available.
-export async function currentAccount(network: string): Promise<Address> {
-  const provider = window.ethereum ?? baseAccountProvider(network);
-  const [account] = (await provider.request({ method: "eth_requestAccounts" })) as Address[];
+/* ---------------- The connected wallet, shared across the page ---------------- */
+
+type Session = { address: Address | null; via: "injected" | "base" | null };
+const EMPTY: Session = { address: null, via: null };
+const STORE_KEY = "deed.wallet";
+let session: Session = EMPTY;
+let loaded = false;
+const listeners = new Set<() => void>();
+
+function load() {
+  if (loaded || typeof window === "undefined") return;
+  loaded = true;
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) ?? "null");
+    if (saved?.address && (saved.via === "injected" || saved.via === "base")) session = saved;
+  } catch {
+    // No saved wallet, or storage is blocked.
+  }
+}
+
+function setSession(next: Session) {
+  session = next;
+  try {
+    if (next.address) localStorage.setItem(STORE_KEY, JSON.stringify(next));
+    else localStorage.removeItem(STORE_KEY);
+  } catch {
+    // Storage blocked; the session still lasts for this page.
+  }
+  listeners.forEach((l) => l());
+}
+
+export const walletSession = {
+  subscribe(l: () => void) {
+    listeners.add(l);
+    return () => listeners.delete(l);
+  },
+  get(): Session {
+    load();
+    return session;
+  },
+  server: (): Session => EMPTY,
+};
+
+// Connects the wallet in this browser if there is one, otherwise a Base
+// Account (passkey). Remembered until the person disconnects.
+export async function connectWallet(network: string): Promise<Address> {
+  const via = hasInjectedWallet() ? "injected" : "base";
+  const { account } = await connect(network, via);
+  setSession({ address: account, via });
   return account;
+}
+
+export function disconnectWallet() {
+  setSession(EMPTY);
+}
+
+// Asks the connected wallet to sign a plain-text message. Nothing is awaited
+// before the wallet request, so the Base window can open straight from the tap.
+export async function signWithWallet(network: string, message: string): Promise<{ address: Address; signature: `0x${string}` }> {
+  load();
+  if (!session.address || !session.via) throw new Error("Connect your wallet first.");
+  const provider = session.via === "base" ? baseAccountProvider(network) : window.ethereum;
+  if (!provider) throw new Error("Your wallet isn't available in this browser. Connect again.");
+  const wallet = createWalletClient({ account: session.address, chain: chainFor(network), transport: custom(provider) });
+  const signature = await wallet.signMessage({ account: session.address, message });
+  return { address: session.address, signature };
 }
 
 // Opens this page inside a wallet app's own browser, where its wallet is injected.

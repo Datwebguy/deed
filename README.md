@@ -26,6 +26,10 @@ The settlor's wishes **are** the system prompt. SERV compiles them once into a b
 
 Payouts are USDC transfers from the trust's own **Coinbase AgentKit** wallet (`CdpEvmWalletProvider`, one CDP server account per trust, `src/lib/wallet.ts`). Balances are read from chain; nothing is simulated.
 
+## Signed by the settlor
+
+Creating a trust needs a connected wallet (any browser wallet, or a Base Account passkey) and a payout wallet for every person. The last step asks the settlor to sign the exact terms: the trust name, a fingerprint of the wishes, each person's payout address and yearly limit, the largest payment and the protector (`src/lib/deed-message.ts`). The server rebuilds that message and verifies the signature, including smart-wallet signatures, before saving anything, and the trust page shows the signing wallet.
+
 ## Private links and the protector
 
 Creating a trust gives the settlor a set of private links (`src/lib/access.ts`):

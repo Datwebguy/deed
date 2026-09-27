@@ -23,6 +23,9 @@ export type Trust = {
   protector?: string;
   protectorEmail?: string; // alerted when a request tries to override the wishes
   settlorKey?: string; // secret in the settlor's private link
+  settlorAddress?: string; // wallet that signed the terms when the trust was made
+  settlorSignature?: string;
+  signedAt?: string;
   protectorKey?: string; // secret in the protector's private link
   paused?: { at: string; by: "settlor" | "protector" }; // no payouts while set
   deed: string;
