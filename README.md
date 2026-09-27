@@ -28,7 +28,7 @@ Payouts are USDC transfers from the trust's own **Coinbase AgentKit** wallet (`C
 
 ## Money flow
 
-- **Funding:** on the trust page the settlor connects their own wallet (Coinbase Wallet, MetaMask, Rabby: any injected wallet), which is switched to Base, and sends USDC straight to the trust's address (`src/components/FundPanel.tsx`). On the test network, "Get free test USDC" asks Coinbase's CDP faucet to fund the trust (`/api/trusts/[id]/faucet`).
+- **Funding:** on the trust page the settlor taps **Pay with Base**: a one-tap USDC payment from a Base Account (passkey wallet, `@base-org/account`), so it works in any phone or desktop browser with no app or extension, and network fees are covered. A wallet already in the browser (extension or a wallet app's own browser) can send directly; on phones without one, links open the page inside Coinbase Wallet, MetaMask or Trust Wallet (`src/components/FundPanel.tsx`). On the test network, "Send free test USDC" asks Coinbase's CDP faucet to fund the trust (`/api/trusts/[id]/faucet`).
 - **Payouts:** after both locks pass, the trustee sends USDC from the trust's wallet to the saved address. On Base Sepolia the wallet tops itself up with faucet ETH for network fees; on Base mainnet it needs a little ETH sent to it once.
 - **History:** "Money in and out" lists every USDC transfer to and from the trust's wallet, read from chain logs since the trust was created, with Basescan links.
 - **Payout addresses:** "Use my wallet" fills a beneficiary's address from the connected wallet.
