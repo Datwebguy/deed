@@ -30,7 +30,18 @@ const Body = z.object({
 
 export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Some details are missing or not valid." }, { status: 400 });
+  if (!parsed.success) {
+    const field = String(parsed.error.issues[0]?.path[0] ?? "");
+    const hint: Record<string, string> = {
+      name: "Give the trust a name.",
+      settlor: "Add your name.",
+      deed: "Write at least a few sentences of wishes.",
+      perRequestMax: "Set the largest single payment.",
+      protectorEmail: "The protector's email doesn't look right.",
+      beneficiaries: "Each person needs a name and a yearly limit above zero.",
+    };
+    return NextResponse.json({ error: hint[field] ?? "Some details are missing or not valid." }, { status: 400 });
+  }
   const b = parsed.data;
   for (const p of b.beneficiaries)
     if (p.wallet && !isAddress(p.wallet))

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkDeed, servConfigured } from "@/lib/serv";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(req: Request) {
   if (!servConfigured()) return NextResponse.json({ error: "The reasoning service is not connected yet." }, { status: 503 });

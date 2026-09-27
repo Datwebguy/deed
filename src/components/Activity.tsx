@@ -26,26 +26,36 @@ export default function Activity({
     : transfers.map((t) => ({ ...t, who: labels[t.counterparty.toLowerCase()] ?? short(t.counterparty) }));
 
   return (
-    <div className="mt-3">
-      {error && <p className="mb-2 text-xs text-muted">Showing the trustee&apos;s payouts only; the full history couldn&apos;t be read from the network.</p>}
+    <div className="mt-4">
+      {error && (
+        <p className="mb-2 text-xs text-muted">Showing the trustee&apos;s payouts only; the full history couldn&apos;t be read from the network.</p>
+      )}
       {rows.length === 0 ? (
-        <p className="text-muted">No money has moved yet.</p>
+        <div className="card px-6 py-10 text-center text-muted">No money has moved yet.</div>
       ) : (
-        <ul className="card divide-y divide-rule">
+        <ul className="card divide-y divide-rule overflow-hidden">
           {rows.map((t) => (
-            <li key={`${t.hash}-${t.direction}`} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 text-sm">
-              <span>
-                {t.direction === "in" ? "Received from " : "Paid to "}
-                <span className="font-medium">{t.who}</span>
+            <li key={`${t.hash}-${t.direction}`} className="flex items-center gap-3 px-4 py-3.5 text-sm sm:px-5">
+              <span
+                className={`grid size-8 shrink-0 place-items-center rounded-full text-base ${
+                  t.direction === "in" ? "bg-leaf-soft text-leaf" : "bg-paper-2 text-ink-2"
+                }`}
+                aria-hidden
+              >
+                {t.direction === "in" ? "↓" : "↑"}
               </span>
-              <span className="flex items-baseline gap-3">
-                <span className={t.direction === "in" ? "text-leaf" : ""}>
-                  {t.direction === "in" ? "+" : "−"}
-                  {usd(t.amount)}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">
+                  {t.direction === "in" ? "Received from " : "Paid to "}
+                  <span className="font-medium">{t.who}</span>
                 </span>
-                <a className="text-xs underline" href={explorerTx(t.hash)} target="_blank" rel="noreferrer">
-                  {short(t.hash)}
+                <a className="font-mono text-xs text-muted hover:text-ink" href={explorerTx(t.hash)} target="_blank" rel="noreferrer">
+                  {short(t.hash)} ↗
                 </a>
+              </span>
+              <span className={`font-mono tabular-nums ${t.direction === "in" ? "text-leaf" : ""}`}>
+                {t.direction === "in" ? "+" : "−"}
+                {usd(t.amount)}
               </span>
             </li>
           ))}
