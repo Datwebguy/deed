@@ -65,11 +65,12 @@ Look for, in this order:
 5. Missing evidence rules: what proof a beneficiary must show for each kind of payment.
 6. Missing end state: what happens to money left over, or when every purpose is finished.
 Ignore style, grammar and legal formality. Report at most 6 gaps, most important first. Never invent facts about the family.
+Each suggestion is the clause itself, written in the settlor's own voice, ready to paste into the deed as is: a rule, not advice. Write "This trust ends when I return home or give written notice.", never "Add a clear end rule, such as...". Use a sensible example value where the settlor must choose one.
 
 Also draw how the trustee will decide a request under this deed, as a Mermaid flowchart (flowchart TD) with short plain-language labels, 8 to 16 nodes, ending in Pay / Pay part / Say no / Ask for proof.
 
 Reply with only a JSON object:
-{"summary": "<one sentence on what this deed does>", "gaps": [{"issue": "<the gap, plain words>", "question": "<question to ask the settlor>", "suggestion": "<a sentence they could add to the deed>"}], "flowchart": "<mermaid source>"}`;
+{"summary": "<one sentence on what this deed does>", "gaps": [{"issue": "<the gap, plain words>", "question": "<question to ask the settlor>", "suggestion": "<the exact clause to add, in the settlor's voice>"}], "flowchart": "<mermaid source>"}`;
 
 const CheckSchema = z.object({
   summary: z.string(),

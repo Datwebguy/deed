@@ -33,6 +33,7 @@ export default function StartWizard({ network }: { network: string }) {
   const [check, setCheck] = useState<DeedCheck | null>(null);
   const [checkedDeed, setCheckedDeed] = useState("");
   const [added, setAdded] = useState<number[]>([]);
+  const [edits, setEdits] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState<"" | "check" | "create">("");
   const [error, setError] = useState("");
 
@@ -78,6 +79,7 @@ export default function StartWizard({ network }: { network: string }) {
       setCheck(data);
       setCheckedDeed(deed);
       setAdded([]);
+      setEdits({});
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -259,12 +261,18 @@ export default function StartWizard({ network }: { network: string }) {
                           <p className="font-medium">{g.issue}</p>
                           <p className="mt-1 text-sm text-muted">{g.question}</p>
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-paper-2 px-4 py-3">
-                            <span className="font-serif italic text-ink-2">“{g.suggestion}”</span>
+                            <textarea
+                              aria-label="Suggested wording"
+                              className="min-h-12 min-w-[14rem] flex-1 resize-y bg-transparent font-serif italic text-ink-2 outline-none"
+                              value={edits[i] ?? g.suggestion}
+                              disabled={added.includes(i)}
+                              onChange={(e) => setEdits((x) => ({ ...x, [i]: e.target.value }))}
+                            />
                             <button
                               type="button"
                               className={added.includes(i) ? "chip !text-leaf" : "btn-ghost !py-1.5 text-sm"}
                               disabled={added.includes(i)}
-                              onClick={() => addSuggestion(i, g.suggestion)}
+                              onClick={() => addSuggestion(i, (edits[i] ?? g.suggestion).trim())}
                             >
                               {added.includes(i) ? "✓ Added" : "Add to my wishes"}
                             </button>
