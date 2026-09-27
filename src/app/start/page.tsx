@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Flowchart from "@/components/Flowchart";
-import { currentAccount } from "@/lib/browser-wallet";
+import { currentAccount, preloadBaseAccount } from "@/lib/browser-wallet";
 import type { DeedCheck } from "@/lib/types";
 
 type Person = { name: string; relation: string; wallet: string; yearlyCap: string };
@@ -59,6 +59,10 @@ export default function Start() {
   const [busy, setBusy] = useState<"" | "check" | "create">("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    preloadBaseAccount().catch(() => {});
+  }, []);
+
   const applyTemplate = (k: string) => {
     const t = TEMPLATES[k];
     setName(t.name);
@@ -74,7 +78,8 @@ export default function Start() {
   async function fillFromMyWallet(i: number) {
     setError("");
     try {
-      setPerson(i, { wallet: await currentAccount() });
+      // A wallet address is the same on every network, so any chain works here.
+      setPerson(i, { wallet: await currentAccount("base") });
     } catch (e) {
       setError((e as Error).message);
     }
