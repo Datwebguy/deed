@@ -1,4 +1,5 @@
 import type { TrustRequest } from "@/lib/types";
+import ReviewButtons from "@/components/ReviewButtons";
 import { TONES, fmt, verdictOf } from "@/lib/verdict";
 import { explorerTx } from "@/lib/wallet";
 
@@ -17,7 +18,16 @@ function ago(iso: string) {
   });
 }
 
-export default function Decisions({ requests, names }: { requests: TrustRequest[]; names: Record<string, string> }) {
+export default function Decisions({
+  requests,
+  names,
+  reviewer,
+}: {
+  requests: TrustRequest[];
+  names: Record<string, string>;
+  // Set for the protector or settlor, who can rule on held payments.
+  reviewer?: { trustId: string; accessKey?: string };
+}) {
   if (requests.length === 0)
     return (
       <div className="card mt-4 grid place-items-center px-6 py-12 text-center">
@@ -60,6 +70,24 @@ export default function Decisions({ requests, names }: { requests: TrustRequest[
                 </p>
               )}
 
+              {r.review && (
+                <div
+                  className={`mt-3 rounded-xl px-4 py-3 text-sm ${r.review.status === "pending" ? "bg-amber-soft text-amber" : "bg-paper-2 text-ink-2"}`}
+                >
+                  {r.review.status === "pending"
+                    ? `Held for review: ${r.review.reason} The trustee would pay $${fmt(r.review.amount)}.`
+                    : `Reviewed by the ${r.review.by}: ${r.review.status}.`}
+                  {r.review.status === "pending" && reviewer && (
+                    <ReviewButtons
+                      trustId={reviewer.trustId}
+                      requestId={r.id}
+                      accessKey={reviewer.accessKey}
+                      amount={r.review.amount}
+                    />
+                  )}
+                </div>
+              )}
+
               {r.decision && (
                 <div className="mt-4 grid gap-3">
                   <ul className="grid gap-1 text-sm">
@@ -81,7 +109,7 @@ export default function Decisions({ requests, names }: { requests: TrustRequest[
                 </div>
               )}
 
-              {(r.checks?.length || r.payoutTx || r.payoutError) && (
+              {(r.checks?.length || r.payoutTx || r.payoutError || (r.runs?.length ?? 0) > 1) && (
                 <footer className="mt-4 flex flex-wrap items-center gap-2 border-t border-rule pt-3 text-sm">
                   {r.checks && r.checks.length > 0 && (
                     <details className="group w-full">
@@ -105,6 +133,22 @@ export default function Decisions({ requests, names }: { requests: TrustRequest[
                         ))}
                       </ul>
                     </details>
+                  )}
+                  {r.runs && r.runs.length > 1 && (
+                    <span className="chip" title="Each run decided independently; the strictest answer stands.">
+                      {r.runs.length} runs ·{" "}
+                      {r.runs
+                        .map((x) =>
+                          x.flagged
+                            ? "stop"
+                            : x.verdict === "need_more"
+                              ? "proof"
+                              : x.verdict === "decline"
+                                ? "no"
+                                : `$${fmt(x.amount)}`,
+                        )
+                        .join(" / ")}
+                    </span>
                   )}
                   {r.payoutTx && (
                     <a

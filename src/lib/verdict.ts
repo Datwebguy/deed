@@ -10,8 +10,12 @@ export const TONES: Record<Tone, { text: string; dot: string }> = {
   amber: { text: "text-amber bg-amber-soft", dot: "bg-amber" },
 };
 
-export function verdictOf(r: Pick<TrustRequest, "final" | "paid" | "payoutTx" | "checks" | "decision">): { label: string; tone: Tone } {
+export function verdictOf(
+  r: Pick<TrustRequest, "final" | "paid" | "payoutTx" | "checks" | "decision" | "review">,
+): { label: string; tone: Tone } {
   const payable = r.final === "approve" || r.final === "partial";
+  if (r.review?.status === "pending") return { label: "Awaiting review", tone: "amber" };
+  if (r.review?.status === "declined") return { label: `Declined by ${r.review.by ?? "reviewer"}`, tone: "seal" };
   if (payable && r.payoutTx) return { label: r.final === "partial" ? `Paid in part · $${fmt(r.paid)}` : `Paid · $${fmt(r.paid)}`, tone: "leaf" };
   if (payable && r.checks?.some((c) => c.rule === "Payouts paused")) return { label: "Approved · held", tone: "amber" };
   if (payable) return { label: "Approved · not sent", tone: "amber" };

@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import Seal from "@/components/ui/Seal";
 import WalletChip from "@/components/WalletChip";
 import { NETWORK } from "@/lib/wallet";
 import "./globals.css";
 
-const serif = Fraunces({ variable: "--font-serif", subsets: ["latin"], axes: ["opsz", "SOFT"], style: ["normal", "italic"] });
+const serif = Newsreader({ variable: "--font-serif", subsets: ["latin"], axes: ["opsz"], style: ["normal", "italic"] });
 const sans = Inter({ variable: "--font-sans", subsets: ["latin"] });
 const mono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 

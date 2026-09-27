@@ -91,12 +91,11 @@ body::before {
   color: var(--paper);
 }
 
-/* Optical size follows the font size; only big headings are drawn tighter. */
-.font-serif {
-  font-variation-settings: "SOFT" 50;
-}
+/* Newsreader: optical size follows the font size; headings are set a touch
+   heavier and tighter. */
 :is(h1, h2).font-serif {
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.015em;
 }
 
 /* ---------- Controls ---------- */
