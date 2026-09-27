@@ -21,7 +21,7 @@ import { spentThisYear } from "@/lib/rules";
 import { getTrust } from "@/lib/store";
 import { trustState } from "@/lib/trust-state";
 import { verdictOf } from "@/lib/verdict";
-import { EXPLORER, NETWORK, TESTNET, USDC, explorerAddress } from "@/lib/wallet";
+import { NETWORK, explorerAddress, explorerOf, isTestnet, netOf, usdcOf } from "@/lib/wallet";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +45,10 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
       </div>
     );
   const state = await trustState(trust);
+  // Each trust lives on its own network: test money or real USDC on Base.
+  const net = netOf(trust);
+  const TESTNET = isTestnet(net);
+  const EXPLORER = explorerOf(net);
 
   const flagged = state.requests.filter((r) => r.decision?.flagged);
   const pending = state.requests.filter((r) => r.review?.status === "pending");
@@ -92,7 +96,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {roleChip && <span className="chip">{roleChip}</span>}
           <span className="chip">
-            <span className="live-dot" /> {TESTNET ? "Base Sepolia · test money" : "Base"}
+            <span className="live-dot" /> {TESTNET ? "Base Sepolia · test money" : "Base · real USDC"}
           </span>
           {trust.paused && <span className="chip !border-seal/50 !text-seal">Payouts paused</span>}
         </div>
@@ -114,7 +118,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           {state.address ? (
             <a
               className="mt-2 block truncate font-mono text-xs text-muted hover:text-ink"
-              href={explorerAddress(state.address)}
+              href={explorerAddress(state.address, net)}
               target="_blank"
               rel="noreferrer"
             >
@@ -240,8 +244,8 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
               <FundPanel
                 trustId={trust.id}
                 address={state.address}
-                network={NETWORK}
-                usdc={USDC}
+                network={net}
+                usdc={usdcOf(net)}
                 testnet={TESTNET}
                 explorer={EXPLORER}
                 accessKey={key}
@@ -276,6 +280,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
             <h2 className="font-serif text-3xl">{role.kind === "beneficiary" ? "Your requests" : "Every decision"}</h2>
             <DecisionPath />
             <Decisions
+              net={net}
               requests={shown}
               names={names}
               reviewer={canPause(role) ? { trustId: trust.id, accessKey: key } : undefined}
@@ -287,6 +292,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
             <p className="mt-1 text-sm text-muted">From the chain, with Basescan links.</p>
             <Suspense fallback={<ActivitySkeleton />}>
               <ActivitySection
+                net={net}
                 address={state.address}
                 fromBlock={trust.fromBlock}
                 requests={state.requests}
@@ -327,7 +333,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 Signed by {trust.settlor}&apos;s wallet{" "}
                 <a
                   className="font-mono hover:text-ink"
-                  href={explorerAddress(trust.settlorAddress)}
+                  href={explorerAddress(trust.settlorAddress, NETWORK)}
                   target="_blank"
                   rel="noreferrer"
                 >

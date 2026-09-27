@@ -1,7 +1,7 @@
 import type { Address } from "viem";
 import Activity from "@/components/Activity";
 import type { TrustRequest } from "@/lib/types";
-import { usdcTransfers, type Transfer } from "@/lib/wallet";
+import { usdcTransfers, type Net, type Transfer } from "@/lib/wallet";
 
 // Reads the trust's USDC history from chain. Rendered inside Suspense so the
 // rest of the page shows while the logs load.
@@ -10,7 +10,9 @@ export default async function ActivitySection({
   fromBlock,
   requests,
   labels,
+  net,
 }: {
+  net?: Net;
   address: Address | null;
   fromBlock?: number;
   requests: TrustRequest[];
@@ -22,12 +24,12 @@ export default async function ActivitySection({
   if (!address) error = "no wallet";
   else {
     try {
-      transfers = await usdcTransfers(address, fromBlock);
+      transfers = await usdcTransfers(address, fromBlock, net);
     } catch (e) {
       error = (e as Error).message.split("\n")[0];
     }
   }
-  return <Activity transfers={transfers} requests={requests} labels={labels} error={error} />;
+  return <Activity transfers={transfers} requests={requests} labels={labels} error={error} net={net} />;
 }
 
 export function ActivitySkeleton() {

@@ -29,6 +29,7 @@ export type Trust = {
   protectorKey?: string; // secret in the protector's private link
   paused?: { at: string; by: "settlor" | "protector" }; // no payouts while set
   demo?: boolean; // made by "Try the demo"; funded from the demo treasury
+  network?: "base" | "base-sepolia"; // where its money lives; older trusts use the site default
   deed: string;
   perRequestMax: number;
   liquidBuffer: number; // USD always kept ready for payouts

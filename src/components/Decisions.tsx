@@ -1,7 +1,7 @@
 import type { TrustRequest } from "@/lib/types";
 import ReviewButtons from "@/components/ReviewButtons";
 import { TONES, fmt, verdictOf } from "@/lib/verdict";
-import { explorerTx } from "@/lib/wallet";
+import { explorerTx, type Net } from "@/lib/wallet";
 
 // Every decision as a timeline: what was asked, the verdict stamp, the reasons
 // in plain words, the clause relied on, and the fixed rules behind it.
@@ -22,7 +22,9 @@ export default function Decisions({
   requests,
   names,
   reviewer,
+  net,
 }: {
+  net?: Net;
   requests: TrustRequest[];
   names: Record<string, string>;
   // Set for the protector or settlor, who can rule on held payments.
@@ -153,7 +155,7 @@ export default function Decisions({
                   {r.payoutTx && (
                     <a
                       className="chip font-mono hover:border-ink"
-                      href={explorerTx(r.payoutTx)}
+                      href={explorerTx(r.payoutTx, net)}
                       target="_blank"
                       rel="noreferrer"
                     >

@@ -5,7 +5,7 @@ import type { Address } from "viem";
 import { TREASURY } from "@/lib/demo";
 import { oneAtATime } from "@/lib/queue";
 import { deleteTrust, getTrust } from "@/lib/store";
-import { TESTNET, payUsdc, trustAddress, usdcBalance } from "@/lib/wallet";
+import { isTestnet, netOf, payUsdc, trustAddress, usdcBalance } from "@/lib/wallet";
 
 const Body = z.object({ key: z.string().max(100).optional(), confirm: z.string().max(80) });
 
@@ -26,17 +26,17 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/del
   return oneAtATime(trust.id, async () => {
     let returnedTx: string | undefined;
     const address = await trustAddress(trust.id).catch(() => null);
-    const balance = address ? Math.floor((await usdcBalance(address).catch(() => 0)) * 100) / 100 : 0;
+    const balance = address ? Math.floor((await usdcBalance(address, netOf(trust)).catch(() => 0)) * 100) / 100 : 0;
     if (balance > 0) {
       const to = trust.settlorAddress ?? (trust.demo ? await trustAddress(TREASURY) : null);
-      if (!to && !TESTNET)
+      if (!to && !isTestnet(netOf(trust)))
         return NextResponse.json(
           { error: "This trust still holds money and has no signing wallet to return it to." },
           { status: 409 },
         );
       if (to) {
         try {
-          returnedTx = await payUsdc(trust.id, to as Address, balance);
+          returnedTx = await payUsdc(trust.id, to as Address, balance, netOf(trust));
         } catch (e) {
           return NextResponse.json(
             { error: `Couldn't return the $${balance} first: ${(e as Error).message}` },

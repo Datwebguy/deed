@@ -30,6 +30,8 @@ export default function StartWizard({ network }: { network: string }) {
   const [perRequestMax, setPerRequestMax] = useState("500");
   const [protector, setProtector] = useState("");
   const [protectorEmail, setProtectorEmail] = useState("");
+  // Test money by default; real USDC on Base when the settlor chooses it.
+  const [money, setMoney] = useState<"base-sepolia" | "base">("base-sepolia");
   const [check, setCheck] = useState<DeedCheck | null>(null);
   const [checkedDeed, setCheckedDeed] = useState("");
   const [added, setAdded] = useState<number[]>([]);
@@ -103,6 +105,7 @@ export default function StartWizard({ network }: { network: string }) {
         settlor: settlor.trim(),
         deed,
         perRequestMax: Number(perRequestMax),
+        network: money,
         protector: protector.trim() || undefined,
         beneficiaries: people.map((p) => ({ name: p.name.trim(), wallet: p.wallet, yearlyCap: Number(p.yearlyCap) })),
         issuedAt: new Date().toISOString(),
@@ -365,6 +368,34 @@ export default function StartWizard({ network }: { network: string }) {
                 <p className="mt-3 text-lg text-muted">Hard limits, and someone who can step in.</p>
                 <div className="mt-8 grid gap-4">
                   <div className="card p-5">
+                    <p className="font-medium">Money</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Money">
+                      {(
+                        [
+                          ["base-sepolia", "Test money", "Free test USDC on Base Sepolia. For trying it out."],
+                          ["base", "Real money", "Real USDC on Base. Needs about $1 of ETH for fees."],
+                        ] as const
+                      ).map(([value, title, note]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={money === value}
+                          onClick={() => setMoney(value)}
+                          className={`rounded-2xl border p-4 text-left transition ${
+                            money === value ? "border-seal ring-2 ring-seal/20" : "border-rule hover:border-ink"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 font-medium">
+                            <span className={`size-3 rounded-full border ${money === value ? "border-seal bg-seal" : "border-rule"}`} />
+                            {title}
+                          </span>
+                          <span className="mt-1 block text-xs text-muted">{note}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="card p-5">
                     <Field label="Largest single payment ($)">
                       <input className="field" inputMode="decimal" value={perRequestMax} onChange={(e) => setPerRequestMax(e.target.value)} />
                     </Field>
@@ -423,6 +454,9 @@ export default function StartWizard({ network }: { network: string }) {
                     <div>
                       <p className="eyebrow mb-2">Safeguards</p>
                       <ul className="grid gap-1 text-sm">
+                        <li className={money === "base" ? "font-medium text-seal" : ""}>
+                          {money === "base" ? "Real USDC on Base" : "Test money on Base Sepolia"}
+                        </li>
                         <li>Largest payment ${Number(perRequestMax).toLocaleString("en-US")}</li>
                         <li>
                           Protector: {protector || "none"}

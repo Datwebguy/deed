@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { roleFor } from "@/lib/access";
 import { getTrust } from "@/lib/store";
-import { TESTNET, requestTestUsdc, walletConfigured } from "@/lib/wallet";
+import { isTestnet, netOf, requestTestUsdc, walletConfigured } from "@/lib/wallet";
 
 export const maxDuration = 60;
 
@@ -14,7 +14,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/fau
   const role = roleFor(trust, typeof key === "string" ? key : undefined);
   if (role.kind !== "settlor" && role.kind !== "legacy")
     return NextResponse.json({ error: "Only the settlor can add test money." }, { status: 403 });
-  if (!TESTNET) return NextResponse.json({ error: "Test money is only available on the test network." }, { status: 400 });
+  if (!isTestnet(netOf(trust))) return NextResponse.json({ error: "Test money is only available on the test network." }, { status: 400 });
   if (!walletConfigured()) return NextResponse.json({ error: "The trust's wallet isn't connected yet." }, { status: 503 });
   try {
     return NextResponse.json({ tx: await requestTestUsdc(trust.id) });

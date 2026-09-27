@@ -9,7 +9,7 @@ import { enforce, spentThisYear } from "@/lib/rules";
 import { getTrust, newId, saveRequest } from "@/lib/store";
 import { trustState } from "@/lib/trust-state";
 import type { Beneficiary, Trust, TrustRequest } from "@/lib/types";
-import { payUsdc } from "@/lib/wallet";
+import { netOf, payUsdc } from "@/lib/wallet";
 
 export const maxDuration = 180;
 
@@ -105,7 +105,7 @@ async function handle(
 
   if ((final === "approve" || final === "partial") && amount > 0 && who.wallet) {
     try {
-      record.payoutTx = await payUsdc(trust.id, who.wallet as Address, amount);
+      record.payoutTx = await payUsdc(trust.id, who.wallet as Address, amount, netOf(trust));
       record.paid = amount;
     } catch (e) {
       record.payoutError = (e as Error).message;

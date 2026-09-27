@@ -1,5 +1,5 @@
 import type { TrustRequest } from "@/lib/types";
-import { explorerTx, type Transfer } from "@/lib/wallet";
+import { explorerTx, type Net, type Transfer } from "@/lib/wallet";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const usd = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
@@ -12,7 +12,9 @@ export default function Activity({
   requests,
   labels,
   error,
+  net,
 }: {
+  net?: Net;
   transfers: Transfer[];
   requests: TrustRequest[];
   labels: Record<string, string>;
@@ -51,7 +53,7 @@ export default function Activity({
                   {t.direction === "in" ? "Received from " : "Paid to "}
                   <span className="font-medium">{t.who}</span>
                 </span>
-                <a className="font-mono text-xs text-muted hover:text-ink" href={explorerTx(t.hash)} target="_blank" rel="noreferrer">
+                <a className="font-mono text-xs text-muted hover:text-ink" href={explorerTx(t.hash, net)} target="_blank" rel="noreferrer">
                   {short(t.hash)} ↗
                 </a>
               </span>
