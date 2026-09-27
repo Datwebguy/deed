@@ -4,7 +4,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Settlor only. Removes the trust and its requests for good.
-export default function DeleteTrust({ trustId, accessKey, name, balance }: { trustId: string; accessKey?: string; name: string; balance: number }) {
+export default function DeleteTrust({
+  trustId,
+  accessKey,
+  name,
+  balance,
+  returnTo,
+}: {
+  trustId: string;
+  accessKey?: string;
+  name: string;
+  balance: number;
+  returnTo?: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState("");
@@ -15,7 +27,10 @@ export default function DeleteTrust({ trustId, accessKey, name, balance }: { tru
     setBusy(true);
     setError("");
     try {
-      const res = await fetch(`/api/trusts/${trustId}/delete`, { method: "POST", body: JSON.stringify({ key: accessKey, confirm }) });
+      const res = await fetch(`/api/trusts/${trustId}/delete`, {
+        method: "POST",
+        body: JSON.stringify({ key: accessKey, confirm }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       router.replace("/?deleted=1");
@@ -27,7 +42,11 @@ export default function DeleteTrust({ trustId, accessKey, name, balance }: { tru
 
   if (!open)
     return (
-      <button type="button" className="text-sm text-muted underline-offset-2 hover:text-seal hover:underline" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="text-sm text-muted underline-offset-2 hover:text-seal hover:underline"
+        onClick={() => setOpen(true)}
+      >
         Delete this trust
       </button>
     );
@@ -37,7 +56,10 @@ export default function DeleteTrust({ trustId, accessKey, name, balance }: { tru
       <p className="font-medium text-seal">Delete this trust?</p>
       <p className="mt-1 text-sm text-muted">
         The wishes, links and every decision are removed for good.
-        {balance > 0 && ` The $${balance.toFixed(2)} in its wallet stays there.`}
+        {balance > 0 &&
+          (returnTo
+            ? ` The $${balance.toFixed(2)} left goes back to ${returnTo.slice(0, 6)}…${returnTo.slice(-4)} first.`
+            : ` The $${balance.toFixed(2)} left stays in its wallet.`)}
       </p>
       <label className="mt-3 grid gap-1.5 text-sm">
         Type <span className="font-medium">{name}</span> to confirm

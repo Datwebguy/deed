@@ -24,6 +24,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
   if (!canPause(role))
     return NextResponse.json({ error: "Only the protector or settlor can review." }, { status: 403 });
   return oneAtATime(trust.id, async () => {
+    // Read the trust again inside the queue, so a pause made a moment ago counts.
+    const t = (await getTrust(trust.id)) ?? trust;
     const record = await getRequest(trust.id, rid);
     if (!record?.review || record.review.status !== "pending" || !record.decision)
       return NextResponse.json({ error: "This request isn't waiting for review." }, { status: 409 });
@@ -38,14 +40,14 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
       return NextResponse.json(record);
     }
 
-    if (trust.paused) return NextResponse.json({ error: "Resume payouts first." }, { status: 409 });
-    const who = trust.beneficiaries.find((b) => b.id === record.beneficiaryId);
+    if (t.paused) return NextResponse.json({ error: "Resume payouts first." }, { status: 409 });
+    const who = t.beneficiaries.find((b) => b.id === record.beneficiaryId);
     if (!who) return NextResponse.json({ error: "That person is no longer in this trust." }, { status: 409 });
 
-    const state = await trustState(trust);
+    const state = await trustState(t);
     const spent = spentThisYear(state.requests, who.id);
     const { final, amount, checks } = enforce({
-      trust,
+      trust: t,
       beneficiary: who,
       asked: record.amount,
       decision: { ...record.decision, verdict: "approve", amount: record.review.amount, flagged: false },
@@ -62,10 +64,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
     record.final = final;
     if (amount > 0 && who.wallet) {
       try {
-        record.payoutTx = await payUsdc(trust.id, who.wallet as Address, amount);
+        record.payoutTx = await payUsdc(t.id, who.wallet as Address, amount);
         record.paid = amount;
+        delete record.payoutError;
       } catch (e) {
         record.payoutError = (e as Error).message;
+        // Still owed: leave it waiting so it can be approved again.
+        record.review = { ...record.review, status: "pending", reason: "The payment didn't go through." };
       }
     }
     await saveRequest(record);
