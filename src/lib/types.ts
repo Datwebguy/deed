@@ -4,6 +4,7 @@ export type Beneficiary = {
   relation: string;
   wallet?: string; // where payouts go (USDC on Base)
   yearlyCap: number; // hard ceiling per calendar year, in USD
+  key?: string; // secret in this person's private link; only they can ask as them
 };
 
 export type Gap = { issue: string; question: string; suggestion: string };
@@ -20,6 +21,10 @@ export type Trust = {
   name: string;
   settlor: string;
   protector?: string;
+  protectorEmail?: string; // alerted when a request tries to override the wishes
+  settlorKey?: string; // secret in the settlor's private link
+  protectorKey?: string; // secret in the protector's private link
+  paused?: { at: string; by: "settlor" | "protector" }; // no payouts while set
   deed: string;
   perRequestMax: number;
   liquidBuffer: number; // USD always kept ready for payouts
@@ -57,6 +62,7 @@ export type TrustRequest = {
   paid: number;
   payoutTx?: string;
   payoutError?: string;
+  protectorAlerted?: boolean; // an email actually went to the protector
   model?: string;
   latencyMs?: number;
 };

@@ -18,8 +18,9 @@ export function enforce(opts: {
   decision: Decision;
   spent: number;
   spendable: number;
+  paused?: boolean;
 }): { final: Verdict; amount: number; checks: Enforcement[] } {
-  const { trust, beneficiary, asked, decision, spent, spendable } = opts;
+  const { trust, beneficiary, asked, decision, spent, spendable, paused } = opts;
   const checks: Enforcement[] = [];
   const wantsPay = decision.verdict === "approve" || decision.verdict === "partial";
   let amount = wantsPay ? decision.amount : 0;
@@ -47,7 +48,11 @@ export function enforce(opts: {
     });
     if (!hasWallet) amount = 0;
     if (decision.flagged) {
-      checks.push({ rule: "Manipulation check", passed: false, note: "The request tried to override the deed, so it was stopped and the protector told" });
+      checks.push({ rule: "Manipulation check", passed: false, note: "The request tried to override the deed, so it was stopped and flagged for the protector" });
+      amount = 0;
+    }
+    if (paused) {
+      checks.push({ rule: "Payouts paused", passed: false, note: "The settlor or protector has paused all payouts, so nothing is sent until they resume" });
       amount = 0;
     }
   }
