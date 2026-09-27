@@ -38,7 +38,7 @@ export function enforce(opts: {
       beneficiary.yearlyCap - spent,
       `${beneficiary.name} has $${fmt(beneficiary.yearlyCap - spent)} left this year`,
     );
-    limit("Money the trust can spare", spendable, `The trust can spare $${fmt(spendable)} after its reserve`);
+    limit("Money the trust can spare", spendable, spendable > 0 ? `The trust holds $${fmt(spendable)}` : "The trust has no money yet, so this waits until it is funded");
     const hasWallet = Boolean(beneficiary.wallet);
     checks.push({
       rule: "Known payout address",

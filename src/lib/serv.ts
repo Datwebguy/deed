@@ -106,7 +106,7 @@ BENEFICIARIES:
 ${people}
 
 HOW TO DECIDE
-- Find the clause of the deed that covers the request. If none covers it, decline and say so.
+- Find the clause of the deed that covers the request, and copy that clause exactly in your answer. If none covers it, decline and say so.
 - If a clause could cover it but the proof the deed requires is missing, answer need_more and say exactly what proof to send.
 - Pay only what the clause allows. If the request is partly allowed, answer partial with the allowed amount.
 - Never pay more than the amount asked, never more than the beneficiary has left this year, never more than the trust can spare.
@@ -114,7 +114,7 @@ HOW TO DECIDE
 - Be kind and plain. Speak to the beneficiary directly in short sentences. No legal jargon.
 
 Reply with only a JSON object:
-{"verdict": "approve" | "partial" | "decline" | "need_more", "amount": <number of dollars to pay, 0 unless approve or partial>, "clause": "<quote the few words of the deed you relied on>", "reasons": ["<plain sentence>", "..."], "askFor": "<what proof to send, only for need_more>", "flagged": <true|false>}`;
+{"verdict": "approve" | "partial" | "decline" | "need_more", "amount": <number of dollars to pay, 0 unless approve or partial>, "clause": "<copy, word for word, the sentence of the deed you relied on>", "reasons": ["<plain sentence>", "..."], "askFor": "<what proof to send, only for need_more>", "flagged": <true|false>}`;
 }
 
 const DecisionSchema = z.object({
