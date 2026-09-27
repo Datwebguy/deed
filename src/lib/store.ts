@@ -40,13 +40,18 @@ const fileStore: Backend = {
   },
 };
 
+// Trust records hold family details, so the store is private.
+async function readBlob(pathname: string) {
+  const { get } = await import("@vercel/blob");
+  const res = await get(pathname, { access: "private", useCache: false });
+  if (!res || res.statusCode !== 200) return null;
+  return JSON.parse(await new Response(res.stream).text());
+}
+
 const blobStore: Backend = {
   async get(kind, id) {
-    const { head } = await import("@vercel/blob");
     try {
-      const meta = await head(`${kind}/${id}.json`);
-      const res = await fetch(`${meta.url}?t=${Date.now()}`, { cache: "no-store" });
-      return res.ok ? await res.json() : null;
+      return await readBlob(`${kind}/${id}.json`);
     } catch {
       return null;
     }
@@ -54,19 +59,16 @@ const blobStore: Backend = {
   async put(kind, id, value) {
     const { put } = await import("@vercel/blob");
     await put(`${kind}/${id}.json`, JSON.stringify(value), {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",
-      cacheControlMaxAge: 0,
     });
   },
   async list(kind) {
     const { list } = await import("@vercel/blob");
     const { blobs } = await list({ prefix: `${kind}/` });
-    const items = await Promise.all(
-      blobs.map((b) => fetch(`${b.url}?t=${Date.now()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null))),
-    );
+    const items = await Promise.all(blobs.map((b) => readBlob(b.pathname).catch(() => null)));
     return items.filter(Boolean);
   },
 };
