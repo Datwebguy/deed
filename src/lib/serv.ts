@@ -42,6 +42,16 @@ function extractJson(text: string): unknown {
   return JSON.parse(body.slice(start, end + 1));
 }
 
+// Small models occasionally wrap or truncate their JSON; one more try almost
+// always fixes it, and is far better than showing the person an error.
+async function twice<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return fn();
+  }
+}
+
 /* ---------------- Deed check ---------------- */
 
 const CHECK_SYSTEM = `You review a family trust deed written in plain language by a non-lawyer, before any money is placed in it.
@@ -68,6 +78,10 @@ const CheckSchema = z.object({
 });
 
 export async function checkDeed(deed: string): Promise<DeedCheck> {
+  return twice(() => checkOnce(deed));
+}
+
+async function checkOnce(deed: string): Promise<DeedCheck> {
   const res = await client().chat.completions.create({
     model: CHECK_MODEL,
     reasoning_effort: "low",
@@ -138,6 +152,10 @@ export type DecideInput = {
 };
 
 export async function decide(t: Trust, input: DecideInput): Promise<{ decision: Decision; model: string }> {
+  return twice(() => decideOnce(t, input));
+}
+
+async function decideOnce(t: Trust, input: DecideInput): Promise<{ decision: Decision; model: string }> {
   const user = `Today is ${input.today}.
 Request from ${input.beneficiaryName}: $${input.amount}.
 What it is for (their words): """${input.reason}"""

@@ -51,15 +51,16 @@ export function enforce(opts: {
       checks.push({ rule: "Manipulation check", passed: false, note: "The request tried to override the deed, so it was stopped and flagged for the protector" });
       amount = 0;
     }
-    if (paused) {
-      checks.push({ rule: "Payouts paused", passed: false, note: "The settlor or protector has paused all payouts, so nothing is sent until they resume" });
-      amount = 0;
-    }
   }
 
   amount = Math.floor(amount * 100) / 100;
   let final: Verdict = decision.verdict;
   if (wantsPay) final = amount <= 0 ? "decline" : amount < asked ? "partial" : "approve";
+  // A pause holds an allowed payment rather than turning it into a no.
+  if (wantsPay && paused && amount > 0) {
+    checks.push({ rule: "Payouts paused", passed: false, note: "The settlor or protector has paused payouts, so this is approved but held until they resume" });
+    amount = 0;
+  }
   return { final, amount, checks };
 }
 

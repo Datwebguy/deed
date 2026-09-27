@@ -2,36 +2,37 @@ import { promises as fs } from "fs";
 import path from "path";
 import type { Trust, TrustRequest } from "./types";
 
-// One JSON document per record. Local disk in development; Vercel Blob when
-// BLOB_READ_WRITE_TOKEN is set (see blobStore below).
-
-type Kind = "trusts" | "requests";
+// One JSON document per record, addressed by path. Local disk in development;
+// Vercel Blob when BLOB_READ_WRITE_TOKEN is set. Requests live under their
+// trust's folder so a trust page only reads its own.
 
 interface Backend {
-  get<T>(kind: Kind, id: string): Promise<T | null>;
-  put<T>(kind: Kind, id: string, value: T): Promise<void>;
-  list<T>(kind: Kind): Promise<T[]>;
+  get<T>(key: string): Promise<T | null>;
+  put<T>(key: string, value: T): Promise<void>;
+  // Documents directly inside a folder (not in its subfolders).
+  list<T>(folder: string): Promise<T[]>;
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
 const fileStore: Backend = {
-  async get(kind, id) {
+  async get(key) {
     try {
-      return JSON.parse(await fs.readFile(path.join(DATA_DIR, kind, `${id}.json`), "utf8"));
+      return JSON.parse(await fs.readFile(path.join(DATA_DIR, `${key}.json`), "utf8"));
     } catch {
       return null;
     }
   },
-  async put(kind, id, value) {
-    await fs.mkdir(path.join(DATA_DIR, kind), { recursive: true });
-    await fs.writeFile(path.join(DATA_DIR, kind, `${id}.json`), JSON.stringify(value, null, 2));
+  async put(key, value) {
+    const file = path.join(DATA_DIR, `${key}.json`);
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    await fs.writeFile(file, JSON.stringify(value, null, 2));
   },
-  async list(kind) {
+  async list(folder) {
     try {
-      const files = await fs.readdir(path.join(DATA_DIR, kind));
+      const files = await fs.readdir(path.join(DATA_DIR, folder));
       const items = await Promise.all(
-        files.filter((f) => f.endsWith(".json")).map((f) => fileStore.get(kind, f.slice(0, -5))),
+        files.filter((f) => f.endsWith(".json")).map((f) => fileStore.get(`${folder}/${f.slice(0, -5)}`)),
       );
       return items.filter(Boolean) as never[];
     } catch {
@@ -49,43 +50,53 @@ async function readBlob(pathname: string) {
 }
 
 const blobStore: Backend = {
-  async get(kind, id) {
+  async get(key) {
     try {
-      return await readBlob(`${kind}/${id}.json`);
+      return await readBlob(`${key}.json`);
     } catch {
       return null;
     }
   },
-  async put(kind, id, value) {
+  async put(key, value) {
     const { put } = await import("@vercel/blob");
-    await put(`${kind}/${id}.json`, JSON.stringify(value), {
+    await put(`${key}.json`, JSON.stringify(value), {
       access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: "application/json",
     });
   },
-  async list(kind) {
+  async list(folder) {
     const { list } = await import("@vercel/blob");
-    const { blobs } = await list({ prefix: `${kind}/` });
-    const items = await Promise.all(blobs.map((b) => readBlob(b.pathname).catch(() => null)));
+    const found: string[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await list({ prefix: `${folder}/`, mode: "folded", cursor });
+      found.push(...page.blobs.map((b) => b.pathname));
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor);
+    const items = await Promise.all(found.map((p) => readBlob(p).catch(() => null)));
     return items.filter(Boolean);
   },
 };
 
 const db: Backend = process.env.BLOB_READ_WRITE_TOKEN ? blobStore : fileStore;
 
-export const getTrust = (id: string) => db.get<Trust>("trusts", id);
-export const saveTrust = (t: Trust) => db.put("trusts", t.id, t);
-export const listTrusts = () => db.list<Trust>("trusts");
+export const getTrust = (id: string) => db.get<Trust>(`trusts/${id}`);
+export const saveTrust = (t: Trust) => db.put(`trusts/${t.id}`, t);
 
-export const getRequest = (id: string) => db.get<TrustRequest>("requests", id);
-export const saveRequest = (r: TrustRequest) => db.put("requests", r.id, r);
-export async function listRequests(trustId: string) {
-  const all = await db.list<TrustRequest>("requests");
-  return all
-    .filter((r) => r.trustId === trustId)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export const saveRequest = (r: TrustRequest) => db.put(`requests/${r.trustId}/${r.id}`, r);
+
+// Requests saved before per-trust folders sit loose in requests/; they are
+// only read for trusts made before the change.
+const FOLDERS_SINCE = "2026-09-28";
+
+export async function listRequests(t: Pick<Trust, "id" | "createdAt">) {
+  const [own, loose] = await Promise.all([
+    db.list<TrustRequest>(`requests/${t.id}`),
+    t.createdAt < FOLDERS_SINCE ? db.list<TrustRequest>("requests") : Promise.resolve([]),
+  ]);
+  return [...own, ...loose.filter((r) => r.trustId === t.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export const newId = () => Math.random().toString(36).slice(2, 10);

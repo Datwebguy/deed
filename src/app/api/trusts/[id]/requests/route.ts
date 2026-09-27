@@ -7,10 +7,20 @@ import { decide, servConfigured } from "@/lib/serv";
 import { enforce, spentThisYear } from "@/lib/rules";
 import { getTrust, newId, saveRequest } from "@/lib/store";
 import { trustState } from "@/lib/trust-state";
-import type { TrustRequest } from "@/lib/types";
+import type { Beneficiary, Trust, TrustRequest } from "@/lib/types";
 import { payUsdc } from "@/lib/wallet";
 
-export const maxDuration = 120;
+export const maxDuration = 180;
+
+// Requests to the same trust are handled one at a time on this server, so two
+// quick requests can't both spend the same yearly limit or balance.
+const queues = new Map<string, Promise<unknown>>();
+function oneAtATime<T>(trustId: string, fn: () => Promise<T>): Promise<T> {
+  const run = (queues.get(trustId) ?? Promise.resolve()).catch(() => {}).then(fn);
+  queues.set(trustId, run);
+  run.finally(() => queues.get(trustId) === run && queues.delete(trustId)).catch(() => {});
+  return run;
+}
 
 const Body = z.object({
   beneficiaryId: z.string(),
@@ -42,6 +52,15 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
       { status: 403 },
     );
 
+  return oneAtATime(trust.id, () => handle(req, trust, who, body));
+}
+
+async function handle(
+  req: Request,
+  trust: Trust,
+  who: Beneficiary,
+  body: z.infer<typeof Body>,
+) {
   const state = await trustState(trust);
   const spent = spentThisYear(state.requests, who.id);
   const started = Date.now();

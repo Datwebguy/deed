@@ -1,80 +1,289 @@
 @import "tailwindcss";
 
+/* Deed: a modern heirloom. Warm paper, ink, a wax-seal red, a thin gold rule. */
+
 :root {
-  --paper: #f4efe4;
-  --card: #fbf8f1;
-  --ink: #1b1a17;
-  --muted: #6b665c;
-  --rule: #d9d0bd;
-  --seal: #8f2d1f;
-  --leaf: #2f6b45;
-  --amber: #9a6a12;
+  --paper: #f5f0e6;
+  --paper-2: #efe8da;
+  --card: #fcf9f3;
+  --ink: #1a1813;
+  --ink-2: #3a362d;
+  --muted: #6e685c;
+  --rule: #ddd3c0;
+  --seal: #9b2f1f;
+  --seal-soft: #f3dfd8;
+  --leaf: #2d6a45;
+  --leaf-soft: #dcebdf;
+  --amber: #996a10;
+  --amber-soft: #f4e8cc;
+  --gold: #b08a3e;
+  --shadow: 0 1px 0 rgba(26, 24, 19, 0.04), 0 8px 24px -12px rgba(26, 24, 19, 0.18);
+  --shadow-lg: 0 1px 0 rgba(26, 24, 19, 0.04), 0 30px 60px -30px rgba(26, 24, 19, 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #15140f;
-    --card: #1d1b16;
-    --ink: #ece6d8;
-    --muted: #a39c8d;
+    --paper: #13120e;
+    --paper-2: #1a1813;
+    --card: #1e1c17;
+    --ink: #efe9dc;
+    --ink-2: #d6cfbf;
+    --muted: #a59e8f;
     --rule: #37332a;
-    --seal: #d8664f;
-    --leaf: #6fbf8a;
-    --amber: #d9a441;
+    --seal: #e0735c;
+    --seal-soft: #3a211b;
+    --leaf: #78c795;
+    --leaf-soft: #1c3024;
+    --amber: #e0ae4c;
+    --amber-soft: #352a15;
+    --gold: #cfa95c;
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 1px 0 rgba(0, 0, 0, 0.3), 0 30px 60px -30px rgba(0, 0, 0, 0.8);
   }
 }
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
   --color-card: var(--card);
   --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-rule: var(--rule);
   --color-seal: var(--seal);
+  --color-seal-soft: var(--seal-soft);
   --color-leaf: var(--leaf);
+  --color-leaf-soft: var(--leaf-soft);
   --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-gold: var(--gold);
   --font-serif: var(--font-serif);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
 }
+
+/* Paper grain, drawn once behind everything. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.25 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--seal);
+  color: var(--paper);
+}
+
+/* Optical size follows the font size; only big headings are drawn tighter. */
+.font-serif {
+  font-variation-settings: "SOFT" 50;
+}
+:is(h1, h2).font-serif {
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Controls ---------- */
 
 .field {
   width: 100%;
   border: 1px solid var(--rule);
   background: var(--card);
-  border-radius: 6px;
-  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
   color: var(--ink);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.field::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
 }
 .field:focus {
-  outline: 2px solid var(--ink);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 10%, transparent);
 }
-.btn {
+
+.btn,
+.btn-ghost,
+.btn-seal {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.25rem;
+  font-weight: 500;
+  line-height: 1.2;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.btn {
   background: var(--ink);
   color: var(--paper);
-  border-radius: 6px;
-  padding: 0.6rem 1.1rem;
-  font-weight: 500;
+  box-shadow: var(--shadow);
 }
-.btn:disabled {
-  opacity: 0.5;
+.btn-seal {
+  background: var(--seal);
+  color: #fff8f2;
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--seal) 80%, transparent);
 }
 .btn-ghost {
   border: 1px solid var(--rule);
-  border-radius: 6px;
-  padding: 0.5rem 0.9rem;
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  padding: 0.6rem 1.05rem;
 }
+.btn:hover:not(:disabled),
+.btn-seal:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.btn:active:not(:disabled),
+.btn-seal:active:not(:disabled),
+.btn-ghost:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+.btn:disabled,
+.btn-seal:disabled,
+.btn-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+:is(.btn, .btn-seal, .btn-ghost, a, button, summary):focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 3px;
+}
+
+/* ---------- Surfaces ---------- */
+
 .card {
   background: var(--card);
   border: 1px solid var(--rule);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  background: var(--card);
+  color: var(--ink-2);
+}
+
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.6;
+}
+
+/* The wax seal used for verdict stamps. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  padding: 0.2rem 0.6rem;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--leaf);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--leaf) 60%, transparent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, var(--paper-2) 0%, var(--card) 50%, var(--paper-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
   border-radius: 10px;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--seal);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

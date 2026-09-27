@@ -1,70 +1,176 @@
 import Link from "next/link";
+import Headline from "@/components/home/Headline";
+import HeroDemo from "@/components/home/HeroDemo";
+import Locks from "@/components/home/Locks";
+import ProtectorDemo from "@/components/home/ProtectorDemo";
+import ScrollText from "@/components/home/ScrollText";
+import Story from "@/components/home/Story";
+import Reveal from "@/components/ui/Reveal";
 
-const steps = [
-  ["Write your wishes", "In your own words: who the money is for, what it may pay for, and what it may not."],
-  ["The trustee checks them", "Before any money goes in, it points out gaps, such as what happens when your child turns 18."],
-  ["Fund the trust", "Send dollars (USDC) to the trust's own wallet. Only the trustee can pay out, and only to people you named."],
-  ["People ask, the trustee decides", "Each request is read against your wishes. It pays, pays part, asks for proof, or says no, and always says why."],
-];
-
-const examples = [
-  ["School fees, not phones", "“Pay my daughter's school fees straight to the school when an invoice arrives. No gadgets unless the school requires them.”"],
-  ["Care for my parents", "“Up to $500 a year for my mother's medical bills, with the bill attached. Groceries up to $60 a month.”"],
-  ["Lock for future me", "“I can't touch this until December except for a real medical emergency or to avoid eviction.”"],
+const EXAMPLES = [
+  {
+    template: "Education fund",
+    title: "School fees, not phones",
+    quote: "Pay my daughter's school fees straight to the school when an invoice arrives. No gadgets unless the school requires them.",
+  },
+  {
+    template: "Support for my parents",
+    title: "Care for my parents",
+    quote: "Up to $1,200 a year for my mother's medical bills, with the bill attached. Groceries up to $60 a month.",
+  },
+  {
+    template: "Lock for future me",
+    title: "Lock it from future me",
+    quote: "I can't touch this until December, except for a real medical emergency or to avoid eviction.",
+  },
 ];
 
 export default function Home() {
   return (
-    <div className="mx-auto max-w-5xl px-4">
-      <section className="py-16 md:py-24">
-        <p className="text-sm uppercase tracking-widest text-muted">A trustee for everyone</p>
-        <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-tight md:text-6xl">
-          Write your wishes. A trustee keeps them, even when you&apos;re not there to say no.
-        </h1>
-        <p className="mt-6 max-w-2xl text-lg text-muted">
-          Wealthy families have always used trusts to make sure money is spent the way they meant. Deed gives anyone the
-          same thing in five minutes: an AI trustee that holds the money and follows your written wishes to the letter.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/start" className="btn">
-            Start a trust
-          </Link>
-          <a href="#how" className="btn-ghost">
-            See how it decides
-          </a>
+    <div className="overflow-x-clip">
+      {/* ---------- Hero ---------- */}
+      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-20 sm:px-6 md:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+        <div>
+          <Reveal y={10}>
+            <p className="chip">
+              <span className="live-dot" /> An AI trustee for everyone
+            </p>
+          </Reveal>
+          <Headline
+            text="Your wishes, *kept.* Even when you're not there to say no."
+            className="mt-6 font-serif text-[2.7rem] leading-[1.02] sm:text-6xl lg:text-7xl"
+          />
+          <Reveal delay={0.6}>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+              Write how your money should be used, in plain words. Deed turns it into a trust: an AI trustee holds the
+              money and pays out only what your wishes allow, only to the people you named.
+            </p>
+          </Reveal>
+          <Reveal delay={0.75}>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href="/start" className="btn-seal px-6 py-3.5 text-base">
+                Start a trust, free
+                <span aria-hidden>→</span>
+              </Link>
+              <a href="#how" className="btn-ghost px-5 py-3.5">
+                See how it decides
+              </a>
+            </div>
+            <p className="mt-5 text-xs text-muted">Five minutes to set up · no lawyer · runs on test money while you try it</p>
+          </Reveal>
+        </div>
+        <Reveal delay={0.3} y={40}>
+          <HeroDemo />
+        </Reveal>
+      </section>
+
+      {/* ---------- Built on ---------- */}
+      <section className="border-y border-rule/70 bg-paper-2/60">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-4 py-5 text-sm text-muted sm:px-6">
+          <span className="eyebrow">Built on</span>
+          <span>SERV reasoning</span>
+          <span className="text-gold">✦</span>
+          <span>Coinbase AgentKit</span>
+          <span className="text-gold">✦</span>
+          <span>USDC on Base</span>
+          <span className="text-gold">✦</span>
+          <span>Pay with Base</span>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {examples.map(([title, text]) => (
-          <div key={title} className="card p-5">
-            <h3 className="font-serif text-xl">{title}</h3>
-            <p className="mt-2 text-muted">{text}</p>
+      {/* ---------- Why ---------- */}
+      <section className="mx-auto max-w-4xl px-4 py-28 sm:px-6 md:py-40">
+        <p className="eyebrow mb-6">Why Deed</p>
+        <ScrollText
+          className="font-serif text-3xl leading-[1.25] sm:text-4xl md:text-5xl"
+          text="Wealthy families have always used trusts to make sure money is spent the way they meant: school fees, not phones. Setting one up costs thousands, so almost nobody has one. *Deed gives anyone the same promise in five minutes."
+        />
+      </section>
+
+      {/* ---------- How it works ---------- */}
+      <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 pb-24 sm:px-6">
+        <Reveal>
+          <p className="eyebrow">How it works</p>
+          <h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">From a few sentences to a trustee that never forgets.</h2>
+        </Reveal>
+        <div className="mt-10">
+          <Story />
+        </div>
+      </section>
+
+      {/* ---------- Two locks ---------- */}
+      <section id="locks" className="scroll-mt-20 border-t border-rule/70 bg-paper-2/40">
+        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 md:py-32">
+          <Reveal>
+            <p className="eyebrow">Safeguards</p>
+            <h2 className="mt-3 max-w-2xl font-serif text-4xl sm:text-5xl">Two locks on every payment.</h2>
+            <p className="mt-4 max-w-2xl text-lg text-muted">
+              The trustee reasons about your wishes. Then fixed rules, written in code, check the result. The rules can
+              lower an amount or turn a yes into a no. They can never make it looser.
+            </p>
+          </Reveal>
+          <div className="mt-12">
+            <Locks />
           </div>
-        ))}
+        </div>
       </section>
 
-      <section id="how" className="py-16">
-        <h2 className="font-serif text-3xl">How it works</h2>
-        <ol className="mt-6 grid gap-6 md:grid-cols-2">
-          {steps.map(([title, text], i) => (
-            <li key={title} className="flex gap-4">
-              <span className="font-serif text-3xl text-seal">{i + 1}</span>
-              <div>
-                <h3 className="font-medium">{title}</h3>
-                <p className="text-muted">{text}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <div className="card mt-10 p-6">
-          <h3 className="font-serif text-xl">Two locks on every payment</h3>
-          <p className="mt-2 text-muted">
-            The trustee reasons about your wishes. Then fixed rules check the result: never more than asked, never above
-            your limits, only to addresses you saved. The rules can only make a decision stricter, never looser. A
-            protector you choose can always step in.
+      {/* ---------- Protector ---------- */}
+      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-24 sm:px-6 md:grid-cols-2 md:py-32">
+        <Reveal>
+          <p className="eyebrow">The protector</p>
+          <h2 className="mt-3 font-serif text-4xl sm:text-5xl">A person you trust can always step in.</h2>
+          <p className="mt-4 text-lg text-muted">
+            Name a sister, a friend or a lawyer as protector. If someone tries to talk the trustee out of your wishes, the
+            request is stopped and the protector is told. One tap pauses every payout. They can&apos;t take the money or
+            change your wishes; they&apos;re a brake, not an owner.
           </p>
+        </Reveal>
+        <Reveal delay={0.15}>
+          <ProtectorDemo />
+        </Reveal>
+      </section>
+
+      {/* ---------- Examples ---------- */}
+      <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+        <Reveal>
+          <p className="eyebrow">Start from an example</p>
+          <h2 className="mt-3 font-serif text-4xl sm:text-5xl">What would you ask it to keep?</h2>
+        </Reveal>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {EXAMPLES.map((e, i) => (
+            <Reveal key={e.title} delay={i * 0.1}>
+              <Link
+                href={`/start?template=${encodeURIComponent(e.template)}`}
+                className="card group flex h-full flex-col p-6 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]"
+              >
+                <h3 className="font-serif text-2xl">{e.title}</h3>
+                <p className="mt-3 flex-1 font-serif text-lg italic leading-snug text-muted">“{e.quote}”</p>
+                <span className="mt-6 text-sm font-medium text-seal">
+                  Use this <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                </span>
+              </Link>
+            </Reveal>
+          ))}
         </div>
+      </section>
+
+      {/* ---------- Final call ---------- */}
+      <section className="px-4 pb-24 sm:px-6">
+        <Reveal>
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-ink px-6 py-16 text-center text-paper sm:py-24">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_0%,color-mix(in_srgb,var(--seal)_45%,transparent),transparent)]" />
+            <h2 className="relative mx-auto max-w-3xl font-serif text-4xl sm:text-6xl">
+              Write your wishes. <span className="italic">We&apos;ll keep them.</span>
+            </h2>
+            <p className="relative mx-auto mt-5 max-w-xl text-paper/70">
+              Try it now on Base&apos;s test network with free test dollars. Nothing to install.
+            </p>
+            <Link href="/start" className="btn-seal relative mt-8 px-7 py-4 text-base">
+              Start a trust <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </Reveal>
       </section>
     </div>
   );
