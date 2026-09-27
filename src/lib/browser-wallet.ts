@@ -139,7 +139,19 @@ export async function signWithWallet(network: string, message: string): Promise<
   if (!session.address || !session.via) throw new Error("Connect your wallet first.");
   const provider = session.via === "base" ? baseAccountProvider(network) : window.ethereum;
   if (!provider) throw new Error("Your wallet isn't available in this browser. Connect again.");
-  const wallet = createWalletClient({ account: session.address, chain: chainFor(network), transport: custom(provider) });
+  const chain = chainFor(network);
+  const wallet = createWalletClient({ account: session.address, chain, transport: custom(provider) });
+  // Smart wallets sign for the network they are on, so a wallet in the
+  // browser is moved to the trust's network first (Base Account's provider is
+  // already set up per network).
+  if (session.via === "injected" && (await wallet.getChainId()) !== chain.id) {
+    try {
+      await wallet.switchChain({ id: chain.id });
+    } catch {
+      await wallet.addChain({ chain });
+      await wallet.switchChain({ id: chain.id });
+    }
+  }
   const signature = await wallet.signMessage({ account: session.address, message });
   return { address: session.address, signature };
 }
