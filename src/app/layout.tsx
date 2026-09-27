@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import Seal from "@/components/ui/Seal";
+import NetworkSwitch, { NetworkStrip } from "@/components/NetworkSwitch";
 import WalletChip from "@/components/WalletChip";
 import { NETWORK } from "@/lib/wallet";
 import "./globals.css";
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/#locks" className="hidden rounded-full px-3 py-2 text-muted transition hover:text-ink sm:block">
                 Safeguards
               </Link>
+              <NetworkSwitch fallback={NETWORK} />
               <WalletChip network={NETWORK} />
               <span className="ml-1 hidden sm:inline">
                 <Link href="/start" className="btn !px-4 !py-2 text-sm">
@@ -48,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </nav>
           </div>
         </header>
+        <NetworkStrip fallback={NETWORK} />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-rule/70">
           <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:items-start sm:justify-between sm:px-6">

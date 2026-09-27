@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { connectWallet, disconnectWallet, preloadBaseAccount, walletSession } from "@/lib/browser-wallet";
+import { useSiteNet, type SiteNet } from "@/lib/net-pref";
 
 export const shortAddress = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
@@ -10,8 +11,10 @@ export function useWallet() {
 }
 
 // Connect / connected button. Used in the header and wherever a wallet is needed.
-export default function WalletChip({ network, className = "" }: { network: string; className?: string }) {
+export default function WalletChip({ network: fallback, className = "" }: { network: string; className?: string }) {
   const { address } = useWallet();
+  // Connect on whichever side of Deed the visitor is using.
+  const network = useSiteNet(fallback as SiteNet);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);

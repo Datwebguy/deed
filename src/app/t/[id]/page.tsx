@@ -12,6 +12,7 @@ import CountUp from "@/components/ui/CountUp";
 import DeleteTrust from "@/components/DeleteTrust";
 import DecisionPath from "@/components/DecisionPath";
 import DemoBar from "@/components/DemoBar";
+import { FollowNetwork } from "@/components/NetworkSwitch";
 import Seal from "@/components/ui/Seal";
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
@@ -74,6 +75,7 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-10 pb-24 sm:px-6">
+      <FollowNetwork net={net} />
       {role.kind === "settlor" && fresh === "1" && <SealedBanner name={trust.name} />}
       {trust.demo && (
         <DemoBar

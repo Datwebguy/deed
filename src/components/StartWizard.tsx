@@ -9,6 +9,7 @@ import Thinking from "@/components/ui/Thinking";
 import WalletChip, { shortAddress, useWallet } from "@/components/WalletChip";
 import { connectWallet, preloadBaseAccount, signWithWallet } from "@/lib/browser-wallet";
 import { deedMessage, type SignedTerms } from "@/lib/deed-message";
+import { setSiteNet, useSiteNet, type SiteNet } from "@/lib/net-pref";
 import { TEMPLATES, type Person } from "@/lib/templates";
 import type { DeedCheck } from "@/lib/types";
 
@@ -30,8 +31,9 @@ export default function StartWizard({ network }: { network: string }) {
   const [perRequestMax, setPerRequestMax] = useState("500");
   const [protector, setProtector] = useState("");
   const [protectorEmail, setProtectorEmail] = useState("");
-  // Test money by default; real USDC on Base when the settlor chooses it.
-  const [money, setMoney] = useState<"base-sepolia" | "base">("base-sepolia");
+  // Follows the Testnet / Mainnet switch; choosing here flips the switch too.
+  const money = useSiteNet(network as SiteNet);
+  const setMoney = setSiteNet;
   const [check, setCheck] = useState<DeedCheck | null>(null);
   const [checkedDeed, setCheckedDeed] = useState("");
   const [added, setAdded] = useState<number[]>([]);
@@ -65,7 +67,7 @@ export default function StartWizard({ network }: { network: string }) {
   async function fillFromMyWallet(i: number) {
     setError("");
     try {
-      setPerson(i, { wallet: connected ?? (await connectWallet(network)) });
+      setPerson(i, { wallet: connected ?? (await connectWallet(money)) });
     } catch (e) {
       setError((e as Error).message);
     }
@@ -110,7 +112,7 @@ export default function StartWizard({ network }: { network: string }) {
         beneficiaries: people.map((p) => ({ name: p.name.trim(), wallet: p.wallet, yearlyCap: Number(p.yearlyCap) })),
         issuedAt: new Date().toISOString(),
       };
-      const { address, signature } = await signWithWallet(network, deedMessage(terms));
+      const { address, signature } = await signWithWallet(money, deedMessage(terms));
       const res = await fetch("/api/trusts", {
         method: "POST",
         body: JSON.stringify({
@@ -476,7 +478,7 @@ export default function StartWizard({ network }: { network: string }) {
                         : "Connect a wallet to sign. Free, moves no money."}
                     </p>
                   </div>
-                  <WalletChip network={network} />
+                  <WalletChip network={money} />
                 </div>
 
               </>

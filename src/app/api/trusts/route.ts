@@ -4,7 +4,7 @@ import { isAddress, type Address, type Hex } from "viem";
 import { deedMessage } from "@/lib/deed-message";
 import { newKey } from "@/lib/access";
 import { newId, saveTrust } from "@/lib/store";
-import { NETWORK, currentBlock, publicClient, trustAddress } from "@/lib/wallet";
+import { NETWORK, clientOf, currentBlock, trustAddress } from "@/lib/wallet";
 import type { Trust } from "@/lib/types";
 
 const Body = z.object({
@@ -72,7 +72,8 @@ export async function POST(req: Request) {
   let valid = false;
   try {
     // Works for ordinary wallets and for smart wallets such as Base Account.
-    valid = await publicClient.verifyMessage({ address: b.settlorAddress as Address, message, signature: b.signature as Hex });
+    // Checked on the chain the settlor chose, where their wallet signed.
+    valid = await clientOf(b.network).verifyMessage({ address: b.settlorAddress as Address, message, signature: b.signature as Hex });
   } catch {
     return NextResponse.json({ error: "Couldn't check your signature right now. Try again in a moment." }, { status: 502 });
   }
