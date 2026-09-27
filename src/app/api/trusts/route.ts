@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAddress } from "viem";
 import { newId, saveTrust } from "@/lib/store";
+import { currentBlock, trustAddress } from "@/lib/wallet";
 import type { Trust } from "@/lib/types";
 
 const Body = z.object({
@@ -44,6 +45,12 @@ export async function POST(req: Request) {
     check: b.check,
     createdAt: new Date().toISOString(),
   };
+  // Open the trust's wallet now so its address can be funded straight away.
+  // If the chain or CDP is unreachable the trust is still saved and the
+  // wallet is opened on first view.
+  const [address, block] = await Promise.allSettled([trustAddress(trust.id), currentBlock()]);
+  if (address.status === "fulfilled" && address.value) trust.address = address.value;
+  if (block.status === "fulfilled") trust.fromBlock = Number(block.value);
   await saveTrust(trust);
   return NextResponse.json({ id: trust.id });
 }

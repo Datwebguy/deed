@@ -13,8 +13,9 @@ export default function Decisions({ requests, names }: { requests: TrustRequest[
   return (
     <ul className="mt-3 grid gap-4">
       {requests.map((r) => {
-        const [label, color] = LABEL[r.final];
         const payable = r.final === "approve" || r.final === "partial";
+        // An approval only reads "Paid" once money actually moved on-chain.
+        const [label, color] = payable && !r.payoutTx ? ["Approved, not sent", "text-amber"] : LABEL[r.final];
         return (
           <li key={r.id} className="card p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">

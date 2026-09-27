@@ -25,6 +25,8 @@ export type Trust = {
   liquidBuffer: number; // USD always kept ready for payouts
   beneficiaries: Beneficiary[];
   check?: DeedCheck;
+  address?: string; // the trust's own wallet, saved once it exists
+  fromBlock?: number; // chain block when the trust was made; history is read from here
   createdAt: string;
 };
 
