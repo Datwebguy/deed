@@ -7,6 +7,7 @@ import ProtectorDemo from "@/components/home/ProtectorDemo";
 import ScrollText from "@/components/home/ScrollText";
 import Story from "@/components/home/Story";
 import Reveal from "@/components/ui/Reveal";
+import TryDemo from "@/components/TryDemo";
 
 const EXAMPLES = [
   {
@@ -53,11 +54,9 @@ export default function Home() {
                 Start a trust, free
                 <span aria-hidden>→</span>
               </Link>
-              <a href="#how" className="btn-ghost px-5 py-3.5">
-                See how it decides
-              </a>
+              <TryDemo className="btn-ghost px-5 py-3.5" label="Try the demo · no wallet" />
             </div>
-            <p className="mt-5 text-xs text-muted">5 minutes · no lawyer · free test money</p>
+            <p className="mt-5 text-xs text-muted">The demo is funded with test money. Tap and ask.</p>
           </Reveal>
         </div>
         <Reveal delay={0.3} y={40}>
@@ -161,9 +160,12 @@ export default function Home() {
               Write your wishes. <span className="italic">We&apos;ll keep them.</span>
             </h2>
             <p className="relative mx-auto mt-5 max-w-xl text-paper/70">Free test money. Nothing to install.</p>
-            <Link href="/start" className="btn-seal relative mt-8 px-7 py-4 text-base">
-              Start a trust <span aria-hidden>→</span>
-            </Link>
+            <div className="relative mt-8 flex flex-wrap items-start justify-center gap-3">
+              <Link href="/start" className="btn-seal px-7 py-4 text-base">
+                Start a trust <span aria-hidden>→</span>
+              </Link>
+              <TryDemo className="btn-ghost !border-paper/30 !bg-transparent px-6 py-4 text-base text-paper" />
+            </div>
           </div>
         </Reveal>
       </section>

@@ -105,7 +105,15 @@ export async function listRequests(t: Pick<Trust, "id" | "createdAt">) {
     db.list<TrustRequest>(`requests/${t.id}`),
     t.createdAt < FOLDERS_SINCE ? db.list<TrustRequest>("requests") : Promise.resolve([]),
   ]);
-  return [...own, ...loose.filter((r) => r.trustId === t.id)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const byId = new Map([...loose.filter((r) => r.trustId === t.id), ...own].map((r) => [r.id, r]));
+  return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function getRequest(trustId: string, id: string) {
+  const own = await db.get<TrustRequest>(`requests/${trustId}/${id}`);
+  if (own) return own;
+  const loose = await db.get<TrustRequest>(`requests/${id}`);
+  return loose?.trustId === trustId ? loose : null;
 }
 
 // Deletes a trust and every request made to it. Cannot be undone.

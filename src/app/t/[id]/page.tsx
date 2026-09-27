@@ -10,6 +10,7 @@ import SealedBanner from "@/components/SealedBanner";
 import ShareLinks from "@/components/ShareLinks";
 import CountUp from "@/components/ui/CountUp";
 import DeleteTrust from "@/components/DeleteTrust";
+import DemoBar from "@/components/DemoBar";
 import Seal from "@/components/ui/Seal";
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
@@ -45,8 +46,10 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
   const state = await trustState(trust);
 
   const flagged = state.requests.filter((r) => r.decision?.flagged);
+  const pending = state.requests.filter((r) => r.review?.status === "pending");
   // A person sees only their own requests; everyone else sees them all.
-  const shown = role.kind === "beneficiary" ? state.requests.filter((r) => r.beneficiaryId === role.person.id) : state.requests;
+  const shown =
+    role.kind === "beneficiary" ? state.requests.filter((r) => r.beneficiaryId === role.person.id) : state.requests;
   const left = (bId: string, cap: number) => Math.max(0, cap - spentThisYear(state.requests, bId));
   const names = Object.fromEntries(trust.beneficiaries.map((b) => [b.id, b.name]));
   const labels: Record<string, string> = { ...names };
@@ -67,6 +70,19 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
   return (
     <div className="mx-auto max-w-6xl px-4 pt-10 pb-24 sm:px-6">
       {role.kind === "settlor" && fresh === "1" && <SealedBanner name={trust.name} />}
+      {trust.demo && (
+        <DemoBar
+          views={[
+            ...trust.beneficiaries.map((b) => ({
+              label: b.name,
+              href: `/t/${trust.id}?k=${b.key}`,
+              active: role.kind === "beneficiary" && role.person.id === b.id,
+            })),
+            { label: "Protector", href: `/t/${trust.id}?k=${trust.protectorKey}`, active: role.kind === "protector" },
+            { label: "Settlor", href: `/t/${trust.id}?k=${trust.settlorKey}`, active: role.kind === "settlor" },
+          ]}
+        />
+      )}
 
       {/* ---------- Header ---------- */}
       <Reveal y={12}>
@@ -95,12 +111,19 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
             <CountUp value={state.balance} decimals={2} prefix="$" />
           </p>
           {state.address ? (
-            <a className="mt-2 block truncate font-mono text-xs text-muted hover:text-ink" href={explorerAddress(state.address)} target="_blank" rel="noreferrer">
+            <a
+              className="mt-2 block truncate font-mono text-xs text-muted hover:text-ink"
+              href={explorerAddress(state.address)}
+              target="_blank"
+              rel="noreferrer"
+            >
               {state.address} ↗
             </a>
           ) : (
             <p className="mt-2 text-xs text-seal">
-              {state.walletError ? `Wallet unreachable: ${state.walletError}` : "The trust's wallet isn't connected yet."}
+              {state.walletError
+                ? `Wallet unreachable: ${state.walletError}`
+                : "The trust's wallet isn't connected yet."}
             </p>
           )}
           {!TESTNET && state.address && state.gas < 0.00001 && (
@@ -112,7 +135,9 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           <p className="mt-1 font-serif text-3xl sm:text-4xl">
             <CountUp value={paidTotal} decimals={2} prefix="$" />
           </p>
-          <p className="mt-2 text-xs text-muted">Largest single payment ${trust.perRequestMax.toLocaleString("en-US")}</p>
+          <p className="mt-2 text-xs text-muted">
+            Largest single payment ${trust.perRequestMax.toLocaleString("en-US")}
+          </p>
         </div>
         <div className="card p-5">
           <p className="text-sm text-muted">Decisions</p>
@@ -127,7 +152,9 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                   ["amber", "bg-amber"],
                   ["seal", "bg-seal"],
                 ] as const
-              ).map(([t, bg]) => <span key={t} className={bg} style={{ width: `${(tally[t] / state.requests.length) * 100}%` }} />)}
+              ).map(([t, bg]) => (
+                <span key={t} className={bg} style={{ width: `${(tally[t] / state.requests.length) * 100}%` }} />
+              ))}
           </div>
           <p className="mt-2 text-xs text-muted">
             {tally.leaf} paid · {tally.amber} waiting · {tally.seal} no
@@ -137,7 +164,11 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           <p className="text-sm text-muted">Protector</p>
           <p className="mt-1 font-serif text-3xl">{trust.protector || "None"}</p>
           <p className="mt-2 text-xs text-muted">
-            {flagged.length > 0 ? `${flagged.length} request${flagged.length > 1 ? "s" : ""} stopped` : "Nothing flagged"}
+            {pending.length > 0
+              ? `${pending.length} to review`
+              : flagged.length > 0
+                ? `${flagged.length} request${flagged.length > 1 ? "s" : ""} stopped`
+                : "Nothing flagged"}
           </p>
         </div>
       </section>
@@ -153,7 +184,15 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 trustId={trust.id}
                 accessKey={key}
                 explorer={EXPLORER}
-                people={[{ id: role.person.id, name: role.person.name, left: left(role.person.id, role.person.yearlyCap), cap: role.person.yearlyCap }]}
+                people={[
+                  {
+                    id: role.person.id,
+                    name: role.person.name,
+                    left: left(role.person.id, role.person.yearlyCap),
+                    cap: role.person.yearlyCap,
+                  },
+                ]}
+                examples={trust.demo}
               />
             </section>
           )}
@@ -163,7 +202,12 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
               <AskForm
                 trustId={trust.id}
                 explorer={EXPLORER}
-                people={trust.beneficiaries.map((b) => ({ id: b.id, name: b.name, left: left(b.id, b.yearlyCap), cap: b.yearlyCap }))}
+                people={trust.beneficiaries.map((b) => ({
+                  id: b.id,
+                  name: b.name,
+                  left: left(b.id, b.yearlyCap),
+                  cap: b.yearlyCap,
+                }))}
               />
             </section>
           )}
@@ -174,7 +218,14 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 <div className="max-w-md">
                   <h2 className="font-medium">{role.kind === "protector" ? "Your role as protector" : "Step in"}</h2>
                   <p className="mt-1 text-sm text-muted">
-                    {flagged.length > 0 ? `${flagged.length} stopped request${flagged.length > 1 ? "s" : ""}, marked below.` : "Nothing flagged."}
+                    {pending.length > 0 && (
+                      <span className="font-medium text-amber">{pending.length} waiting for your review below. </span>
+                    )}
+                    {flagged.length > 0
+                      ? `${flagged.length} stopped request${flagged.length > 1 ? "s" : ""}.`
+                      : pending.length
+                        ? ""
+                        : "Nothing flagged."}
                     {trust.protectorEmail && emailConfigured() ? ` Alerts go to ${trust.protectorEmail}.` : ""}
                   </p>
                 </div>
@@ -185,7 +236,14 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
 
           {state.address && role.kind !== "beneficiary" && role.kind !== "protector" && (
             <section className="mb-8">
-              <FundPanel trustId={trust.id} address={state.address} network={NETWORK} usdc={USDC} testnet={TESTNET} explorer={EXPLORER} />
+              <FundPanel
+                trustId={trust.id}
+                address={state.address}
+                network={NETWORK}
+                usdc={USDC}
+                testnet={TESTNET}
+                explorer={EXPLORER}
+              />
             </section>
           )}
 
@@ -195,7 +253,13 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
                 links={[
                   { label: "You", note: "manage and fund", href: `/t/${trust.id}?k=${trust.settlorKey}` },
                   ...(trust.protectorKey
-                    ? [{ label: trust.protector || "Protector", note: "review and pause", href: `/t/${trust.id}?k=${trust.protectorKey}` }]
+                    ? [
+                        {
+                          label: trust.protector || "Protector",
+                          note: "review and pause",
+                          href: `/t/${trust.id}?k=${trust.protectorKey}`,
+                        },
+                      ]
                     : []),
                   ...trust.beneficiaries
                     .filter((b) => b.key)
@@ -208,14 +272,23 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           {/* ---------- Record ---------- */}
           <section>
             <h2 className="font-serif text-3xl">{role.kind === "beneficiary" ? "Your requests" : "Every decision"}</h2>
-            <Decisions requests={shown} names={names} />
+            <Decisions
+              requests={shown}
+              names={names}
+              reviewer={canPause(role) ? { trustId: trust.id, accessKey: key } : undefined}
+            />
           </section>
 
           <section className="mt-12">
             <h2 className="font-serif text-3xl">Money in and out</h2>
             <p className="mt-1 text-sm text-muted">From the chain, with Basescan links.</p>
             <Suspense fallback={<ActivitySkeleton />}>
-              <ActivitySection address={state.address} fromBlock={trust.fromBlock} requests={state.requests} labels={labels} />
+              <ActivitySection
+                address={state.address}
+                fromBlock={trust.fromBlock}
+                requests={state.requests}
+                labels={labels}
+              />
             </Suspense>
           </section>
 
@@ -234,28 +307,40 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
               <p className="text-sm text-muted">Followed exactly.</p>
             </div>
             <div className="max-h-[52vh] overflow-y-auto px-5 py-4 font-serif leading-relaxed">
-              {trust.deed.split("\n").filter(Boolean).map((line, i) => {
-                const m = line.match(/^(\d+)[.)]\s*(.*)$/);
-                return m ? (
-                  <p key={i} className="mt-2 flex gap-3">
-                    <span className="w-5 shrink-0 text-right font-sans text-xs leading-7 text-gold">{m[1]}</span>
-                    <span>{m[2]}</span>
-                  </p>
-                ) : (
-                  <p key={i} className="mt-2 first:mt-0">
-                    {line}
-                  </p>
-                );
-              })}
+              {trust.deed
+                .split("\n")
+                .filter(Boolean)
+                .map((line, i) => {
+                  const m = line.match(/^(\d+)[.)]\s*(.*)$/);
+                  return m ? (
+                    <p key={i} className="mt-2 flex gap-3">
+                      <span className="w-5 shrink-0 text-right font-sans text-xs leading-7 text-gold">{m[1]}</span>
+                      <span>{m[2]}</span>
+                    </p>
+                  ) : (
+                    <p key={i} className="mt-2 first:mt-0">
+                      {line}
+                    </p>
+                  );
+                })}
             </div>
             {trust.settlorAddress && (
               <p className="flex items-center gap-2 border-t border-rule px-5 py-3 text-xs text-muted">
                 <span className="grid size-4 place-items-center rounded-full bg-leaf text-[9px] text-paper">✓</span>
                 Signed by {trust.settlor}&apos;s wallet{" "}
-                <a className="font-mono hover:text-ink" href={explorerAddress(trust.settlorAddress)} target="_blank" rel="noreferrer">
+                <a
+                  className="font-mono hover:text-ink"
+                  href={explorerAddress(trust.settlorAddress)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   {trust.settlorAddress.slice(0, 6)}…{trust.settlorAddress.slice(-4)}
                 </a>
-                {trust.signedAt && <span>· {new Date(trust.signedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
+                {trust.signedAt && (
+                  <span>
+                    · {new Date(trust.signedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  </span>
+                )}
               </p>
             )}
             <div className="gold-rule" />

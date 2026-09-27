@@ -19,10 +19,15 @@ The settlor's wishes **are** the system prompt. SERV compiles them once into a b
 | Requests are written by the person who gains from a yes | `serv_prompt_guard` | `decide` |
 | Second check before money moves | `serv_shadow_agent` with a hint that the clause must exist and amounts must fit the limits | `decide` |
 
+## Try it
+
+Tap **Try the demo** on the home page: it makes a trust funded with test USDC and opens it as Ada, with one-tap example requests and a switch to see the protector's and settlor's views. No wallet needed. Demo trusts are funded from a demo treasury (a CDP wallet; its address and balance are in `/api/health`), and Ada's payouts go back to it. Top it up with test USDC from faucet.circle.com.
+
 ## Two locks on every payment
 
 1. **Reasoning** (`src/lib/serv.ts`): verdict, amount, the clause relied on, reasons in plain words.
-2. **Fixed rules** (`src/lib/rules.ts`): never more than asked, the per-payment limit, each person's yearly limit, what the wallet actually holds, only to a saved address, and a hard stop when a request tries to override the wishes. These can only lower an amount or turn a yes into a no.
+   The trustee decides three times independently and the strictest answer stands (`SERV_RUNS`).
+2. **Fixed rules** (`src/lib/rules.ts`): the quoted clause must really be in the wishes and the runs must agree, or the payment waits for the protector to approve or decline; never more than asked, the per-payment limit, each person's yearly limit, what the wallet actually holds, only to a saved address, and a hard stop when a request tries to override the wishes. These can only lower an amount or turn a yes into a no.
 
 Payouts are USDC transfers from the trust's own **Coinbase AgentKit** wallet (`CdpEvmWalletProvider`, one CDP server account per trust, `src/lib/wallet.ts`). Balances are read from chain; nothing is simulated.
 

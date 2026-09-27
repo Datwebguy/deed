@@ -28,6 +28,7 @@ export type Trust = {
   signedAt?: string;
   protectorKey?: string; // secret in the protector's private link
   paused?: { at: string; by: "settlor" | "protector" }; // no payouts while set
+  demo?: boolean; // made by "Try the demo"; funded from the demo treasury
   deed: string;
   perRequestMax: number;
   liquidBuffer: number; // USD always kept ready for payouts
@@ -66,6 +67,15 @@ export type TrustRequest = {
   payoutTx?: string;
   payoutError?: string;
   protectorAlerted?: boolean; // an email actually went to the protector
+  runs?: { verdict: Verdict; amount: number; flagged: boolean }[]; // each independent run
+  // A payment the fixed rules held for a person to approve.
+  review?: {
+    status: "pending" | "approved" | "declined";
+    reason: string;
+    amount: number;
+    by?: "settlor" | "protector";
+    at?: string;
+  };
   model?: string;
   latencyMs?: number;
 };

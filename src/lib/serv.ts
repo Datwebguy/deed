@@ -151,8 +151,30 @@ export type DecideInput = {
   today: string;
 };
 
-export async function decide(t: Trust, input: DecideInput): Promise<{ decision: Decision; model: string }> {
-  return twice(() => decideOnce(t, input));
+export type Run = { verdict: Decision["verdict"]; amount: number; flagged: boolean };
+
+// How strict a decision is: a flagged request is strictest, then no, then
+// asking for proof, then paying less before paying more.
+const strictness = (d: Decision) =>
+  d.flagged ? 0 : d.verdict === "decline" ? 1 : d.verdict === "need_more" ? 2 : 3 + d.amount;
+
+// The trustee decides several times independently and the strictest answer
+// stands. If the runs don't agree, the fixed rules send a payment to a person.
+export async function decide(
+  t: Trust,
+  input: DecideInput,
+): Promise<{ decision: Decision; model: string; runs: Run[]; agree: boolean }> {
+  const n = Math.max(1, Math.min(5, Number(process.env.SERV_RUNS ?? 3)));
+  const settled = await Promise.allSettled(Array.from({ length: n }, () => twice(() => decideOnce(t, input))));
+  const ok = settled.flatMap((r) => (r.status === "fulfilled" ? [r.value.decision] : []));
+  if (ok.length === 0) throw (settled[0] as PromiseRejectedResult).reason;
+  const decision = [...ok].sort((a, b) => strictness(a) - strictness(b))[0];
+  const runs = ok.map((d) => ({ verdict: d.verdict, amount: d.amount, flagged: Boolean(d.flagged) }));
+  const agree =
+    ok.length === n &&
+    runs.every((r) => r.verdict === runs[0].verdict && r.flagged === runs[0].flagged && Math.abs(r.amount - runs[0].amount) < 0.01);
+  // Any run spotting manipulation is enough to stop the request.
+  return { decision: { ...decision, flagged: runs.some((r) => r.flagged) }, model: DECIDE_MODEL, runs, agree };
 }
 
 async function decideOnce(t: Trust, input: DecideInput): Promise<{ decision: Decision; model: string }> {

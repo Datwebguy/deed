@@ -11,6 +11,24 @@ export function spentThisYear(requests: TrustRequest[], beneficiaryId: string, n
     .reduce((sum, r) => sum + (r.paid || 0), 0);
 }
 
+// True when the clause the trustee quoted really is in the wishes. Wording is
+// compared loosely (case, punctuation, numbering, spacing); a quote joined
+// with "…" must match piece by piece.
+export function clauseInDeed(clause: string, deed: string) {
+  const norm = (x: string) =>
+    x
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201c\u201d]/g, "'")
+      .replace(/[^a-z0-9$]+/g, " ")
+      .trim();
+  const text = norm(deed);
+  const parts = clause
+    .split(/\.\.\.|\u2026/)
+    .map((p) => norm(p.replace(/^\s*\d+[.)]\s*/, "")))
+    .filter((p) => p.length > 0);
+  return parts.length > 0 && parts.join("").length >= 12 && parts.every((p) => text.includes(p));
+}
+
 export function enforce(opts: {
   trust: Trust;
   beneficiary: Beneficiary;
@@ -19,8 +37,12 @@ export function enforce(opts: {
   spent: number;
   spendable: number;
   paused?: boolean;
-}): { final: Verdict; amount: number; checks: Enforcement[] } {
-  const { trust, beneficiary, asked, decision, spent, spendable, paused } = opts;
+  // How many independent runs decided, and whether they agreed.
+  runs?: { total: number; agree: boolean };
+  // Set when a person has already reviewed and approved this payment.
+  reviewed?: boolean;
+}): { final: Verdict; amount: number; checks: Enforcement[]; review?: { reason: string; amount: number } } {
+  const { trust, beneficiary, asked, decision, spent, spendable, paused, runs, reviewed } = opts;
   const checks: Enforcement[] = [];
   const wantsPay = decision.verdict === "approve" || decision.verdict === "partial";
   let amount = wantsPay ? decision.amount : 0;
@@ -56,12 +78,33 @@ export function enforce(opts: {
   amount = Math.floor(amount * 100) / 100;
   let final: Verdict = decision.verdict;
   if (wantsPay) final = amount <= 0 ? "decline" : amount < asked ? "partial" : "approve";
+
+  // A payment the code can't fully stand behind waits for a person.
+  let review: { reason: string; amount: number } | undefined;
+  if (wantsPay && amount > 0 && !reviewed) {
+    const found = clauseInDeed(decision.clause, trust.deed);
+    checks.push({
+      rule: "Clause is in the wishes",
+      passed: found,
+      note: found ? "The quoted clause matches the wishes word for word" : "The quoted clause isn't in the wishes, so a person must review this",
+    });
+    if (!found) review = { reason: "The trustee quoted a clause that isn't in the wishes.", amount };
+    if (runs && runs.total > 1) {
+      checks.push({
+        rule: "Independent runs agree",
+        passed: runs.agree,
+        note: runs.agree ? `All ${runs.total} runs reached the same answer` : `The ${runs.total} runs disagreed, so a person must review this`,
+      });
+      if (!runs.agree) review ??= { reason: `The ${runs.total} independent runs didn't agree.`, amount };
+    }
+    if (review) amount = 0;
+  }
   // A pause holds an allowed payment rather than turning it into a no.
   if (wantsPay && paused && amount > 0) {
     checks.push({ rule: "Payouts paused", passed: false, note: "The settlor or protector has paused payouts, so this is approved but held until they resume" });
     amount = 0;
   }
-  return { final, amount, checks };
+  return { final, amount, checks, review };
 }
 
 const fmt = (n: number) => (Math.round(n * 100) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });

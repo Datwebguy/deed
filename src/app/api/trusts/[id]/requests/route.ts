@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { Address } from "viem";
 import { roleFor } from "@/lib/access";
+import { oneAtATime } from "@/lib/queue";
 import { alertProtector } from "@/lib/notify";
 import { decide, servConfigured } from "@/lib/serv";
 import { enforce, spentThisYear } from "@/lib/rules";
@@ -12,15 +13,6 @@ import { payUsdc } from "@/lib/wallet";
 
 export const maxDuration = 180;
 
-// Requests to the same trust are handled one at a time on this server, so two
-// quick requests can't both spend the same yearly limit or balance.
-const queues = new Map<string, Promise<unknown>>();
-function oneAtATime<T>(trustId: string, fn: () => Promise<T>): Promise<T> {
-  const run = (queues.get(trustId) ?? Promise.resolve()).catch(() => {}).then(fn);
-  queues.set(trustId, run);
-  run.finally(() => queues.get(trustId) === run && queues.delete(trustId)).catch(() => {});
-  return run;
-}
 
 const Body = z.object({
   beneficiaryId: z.string(),
@@ -81,7 +73,7 @@ async function handle(
     return NextResponse.json({ error: `The trustee couldn't decide right now: ${(e as Error).message}` }, { status: 502 });
   }
 
-  const { final, amount, checks } = enforce({
+  const { final, amount, checks, review } = enforce({
     trust,
     beneficiary: who,
     asked: body.amount,
@@ -89,6 +81,7 @@ async function handle(
     spent,
     spendable: state.spendable,
     paused: Boolean(trust.paused),
+    runs: { total: result.runs.length, agree: result.agree },
   });
 
   const record: TrustRequest = {
@@ -105,6 +98,8 @@ async function handle(
     paid: 0,
     model: result.model,
     latencyMs: Date.now() - started,
+    runs: result.runs,
+    review: review && { status: "pending", ...review },
   };
 
   if ((final === "approve" || final === "partial") && amount > 0 && who.wallet) {
@@ -116,7 +111,8 @@ async function handle(
     }
   }
 
-  if (result.decision.flagged) record.protectorAlerted = await alertProtector(trust, record, who.name, new URL(req.url).origin);
+  if (result.decision.flagged || record.review)
+    record.protectorAlerted = await alertProtector(trust, record, who.name, new URL(req.url).origin);
 
   await saveRequest(record);
   return NextResponse.json(record);

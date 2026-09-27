@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { demoEnabled, treasury } from "@/lib/demo";
 import { servConfigured } from "@/lib/serv";
 import { NETWORK, ethBalance, publicClient, trustAddress, walletConfigured } from "@/lib/wallet";
 
@@ -22,6 +23,8 @@ export async function GET() {
   } catch (e) {
     chainError = (e as Error).message.split("\n")[0].slice(0, 200);
   }
+  // Top this up with test USDC (faucet.circle.com) to keep "Try the demo" funded.
+  const demo = demoEnabled() ? await treasury().catch(() => null) : null;
   return NextResponse.json({
     reasoning: servConfigured(),
     walletKeys: walletConfigured(),
@@ -32,6 +35,8 @@ export async function GET() {
     chainBlock,
     chainError,
     gasEth,
+    demoTreasury: demo?.address ?? null,
+    demoTreasuryUsdc: demo?.balance ?? null,
     storage: process.env.BLOB_READ_WRITE_TOKEN ? "private-blob" : "local-files",
   });
 }
