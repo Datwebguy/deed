@@ -26,6 +26,16 @@ The settlor's wishes **are** the system prompt. SERV compiles them once into a b
 
 Payouts are USDC transfers from the trust's own **Coinbase AgentKit** wallet (`CdpEvmWalletProvider`, one CDP server account per trust, `src/lib/wallet.ts`). Balances are read from chain; nothing is simulated.
 
+## Private links and the protector
+
+Creating a trust gives the settlor a set of private links (`src/lib/access.ts`):
+
+- **Settlor**: fund the trust, share the other links, pause payouts.
+- **Protector**: see requests that tried to override the wishes, and pause or resume all payouts.
+- **One per named person**: the only way to ask the trustee as that person. The form is locked to them and they see only their own requests.
+
+The trust's plain address is read-only. When a request tries to override the wishes it is stopped by the fixed rules, marked on the page, and, if `RESEND_API_KEY` is set and the settlor gave a protector email, the protector is emailed a link to review it. While paused, the trustee still decides requests but the fixed rules send nothing.
+
 ## Money flow
 
 - **Funding:** on the trust page the settlor taps **Pay with Base**: a one-tap USDC payment from a Base Account (passkey wallet, `@base-org/account`), so it works in any phone or desktop browser with no app or extension, and network fees are covered. A wallet already in the browser (extension or a wallet app's own browser) can send directly; on phones without one, links open the page inside Coinbase Wallet, MetaMask or Trust Wallet (`src/components/FundPanel.tsx`). On the test network, "Send free test USDC" asks Coinbase's CDP faucet to fund the trust (`/api/trusts/[id]/faucet`).

@@ -52,6 +52,7 @@ export default function Start() {
   const [name, setName] = useState("");
   const [settlor, setSettlor] = useState("");
   const [protector, setProtector] = useState("");
+  const [protectorEmail, setProtectorEmail] = useState("");
   const [deed, setDeed] = useState("");
   const [perRequestMax, setPerRequestMax] = useState("500");
   const [people, setPeople] = useState<Person[]>([{ name: "", relation: "", wallet: "", yearlyCap: "1000" }]);
@@ -106,11 +107,11 @@ export default function Start() {
     try {
       const res = await fetch("/api/trusts", {
         method: "POST",
-        body: JSON.stringify({ name, settlor, protector, deed, perRequestMax, beneficiaries: people, check }),
+        body: JSON.stringify({ name, settlor, protector, protectorEmail, deed, perRequestMax, beneficiaries: people, check }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      router.push(`/t/${data.id}`);
+      router.push(`/t/${data.id}?k=${data.key}&new=1`);
     } catch (e) {
       setError((e as Error).message);
       setBusy("");
@@ -228,6 +229,16 @@ export default function Start() {
         <label className="grid gap-1">
           <span className="text-sm">Protector (someone you trust to step in, optional)</span>
           <input className="field" value={protector} onChange={(e) => setProtector(e.target.value)} />
+        </label>
+        <label className="grid gap-1 md:col-start-2">
+          <span className="text-sm">Protector&apos;s email (they&apos;re alerted if someone tries to trick the trustee)</span>
+          <input
+            className="field"
+            type="email"
+            inputMode="email"
+            value={protectorEmail}
+            onChange={(e) => setProtectorEmail(e.target.value.trim())}
+          />
         </label>
       </div>
 

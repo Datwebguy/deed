@@ -28,6 +28,11 @@ export default function Decisions({ requests, names }: { requests: TrustRequest[
               </p>
             </div>
             <p className="mt-1 text-muted">“{r.reason}”</p>
+            {r.decision?.flagged && (
+              <p className="mt-2 inline-block rounded border border-seal px-2 py-0.5 text-xs text-seal">
+                Tried to override the wishes · flagged for the protector{r.protectorAlerted ? " · protector emailed" : ""}
+              </p>
+            )}
             {r.decision && (
               <div className="mt-3 border-l-2 border-rule pl-3">
                 <ul className="grid gap-1">

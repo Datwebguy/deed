@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { Address } from "viem";
+import { roleFor } from "@/lib/access";
+import { alertProtector } from "@/lib/notify";
 import { decide, servConfigured } from "@/lib/serv";
 import { enforce, spentThisYear } from "@/lib/rules";
 import { getTrust, newId, saveRequest } from "@/lib/store";
@@ -15,6 +17,7 @@ const Body = z.object({
   amount: z.coerce.number().positive().max(1_000_000),
   reason: z.string().min(3).max(2000),
   evidence: z.string().max(6000).default(""),
+  key: z.string().max(100).optional(),
 });
 
 export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/requests">) {
@@ -25,8 +28,19 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
   const parsed = Body.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: "Say how much and what it's for." }, { status: 400 });
   const body = parsed.data;
-  const who = trust.beneficiaries.find((b) => b.id === body.beneficiaryId);
-  if (!who) return NextResponse.json({ error: "That person isn't named in this trust." }, { status: 400 });
+  // Only a named person, through their own private link, can ask as themselves.
+  const role = roleFor(trust, body.key);
+  const who =
+    role.kind === "beneficiary"
+      ? role.person
+      : role.kind === "legacy"
+        ? trust.beneficiaries.find((b) => b.id === body.beneficiaryId)
+        : undefined;
+  if (!who)
+    return NextResponse.json(
+      { error: role.kind === "public" ? "Use your own private link to ask the trustee." : "That person isn't named in this trust." },
+      { status: 403 },
+    );
 
   const state = await trustState(trust);
   const spent = spentThisYear(state.requests, who.id);
@@ -55,6 +69,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
     decision: result.decision,
     spent,
     spendable: state.spendable,
+    paused: Boolean(trust.paused),
   });
 
   const record: TrustRequest = {
@@ -81,6 +96,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
       record.payoutError = (e as Error).message;
     }
   }
+
+  if (result.decision.flagged) record.protectorAlerted = await alertProtector(trust, record, who.name, new URL(req.url).origin);
 
   await saveRequest(record);
   return NextResponse.json(record);

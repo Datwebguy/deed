@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 
 type Person = { id: string; name: string; left: number };
 
-export default function AskForm({ trustId, people }: { trustId: string; people: Person[] }) {
+// With an accessKey the form is locked to the one person whose link it is.
+export default function AskForm({ trustId, people, accessKey }: { trustId: string; people: Person[]; accessKey?: string }) {
   const router = useRouter();
   const [who, setWho] = useState(people[0]?.id ?? "");
   const [amount, setAmount] = useState("");
@@ -21,7 +22,7 @@ export default function AskForm({ trustId, people }: { trustId: string; people: 
     try {
       const res = await fetch(`/api/trusts/${trustId}/requests`, {
         method: "POST",
-        body: JSON.stringify({ beneficiaryId: who, amount, reason, evidence }),
+        body: JSON.stringify({ beneficiaryId: who, amount, reason, evidence, key: accessKey }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -43,13 +44,17 @@ export default function AskForm({ trustId, people }: { trustId: string; people: 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1">
           <span className="text-sm">Who is asking</span>
-          <select className="field" value={who} onChange={(e) => setWho(e.target.value)}>
-            {people.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          {people.length === 1 ? (
+            <p className="field">{people[0].name}</p>
+          ) : (
+            <select className="field" value={who} onChange={(e) => setWho(e.target.value)}>
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
           {left !== undefined && <span className="text-xs text-muted">${left.toLocaleString("en-US")} left this year</span>}
         </label>
         <label className="grid gap-1">

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAddress } from "viem";
+import { newKey } from "@/lib/access";
 import { newId, saveTrust } from "@/lib/store";
 import { currentBlock, trustAddress } from "@/lib/wallet";
 import type { Trust } from "@/lib/types";
@@ -9,6 +10,7 @@ const Body = z.object({
   name: z.string().min(2).max(80),
   settlor: z.string().min(1).max(80),
   protector: z.string().max(80).optional(),
+  protectorEmail: z.string().email().max(120).optional().or(z.literal("")),
   deed: z.string().min(40).max(8000),
   perRequestMax: z.coerce.number().positive(),
   liquidBuffer: z.coerce.number().min(0).default(0),
@@ -38,10 +40,13 @@ export async function POST(req: Request) {
     name: b.name,
     settlor: b.settlor,
     protector: b.protector || undefined,
+    protectorEmail: b.protectorEmail || undefined,
+    settlorKey: newKey(),
+    protectorKey: newKey(),
     deed: b.deed,
     perRequestMax: b.perRequestMax,
     liquidBuffer: b.liquidBuffer,
-    beneficiaries: b.beneficiaries.map((p) => ({ ...p, id: newId(), wallet: p.wallet || undefined })),
+    beneficiaries: b.beneficiaries.map((p) => ({ ...p, id: newId(), key: newKey(), wallet: p.wallet || undefined })),
     check: b.check,
     createdAt: new Date().toISOString(),
   };
@@ -52,5 +57,6 @@ export async function POST(req: Request) {
   if (address.status === "fulfilled" && address.value) trust.address = address.value;
   if (block.status === "fulfilled") trust.fromBlock = Number(block.value);
   await saveTrust(trust);
-  return NextResponse.json({ id: trust.id });
+  // The settlor's private link is the only way back in to manage the trust.
+  return NextResponse.json({ id: trust.id, key: trust.settlorKey });
 }
