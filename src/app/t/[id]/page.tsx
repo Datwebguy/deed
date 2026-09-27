@@ -293,12 +293,6 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
               />
             </Suspense>
           </section>
-
-          {(role.kind === "settlor" || role.kind === "legacy") && (
-            <section className="mt-16 border-t border-rule pt-6">
-              <DeleteTrust trustId={trust.id} accessKey={key} name={trust.name} balance={state.balance} />
-            </section>
-          )}
         </div>
 
         {/* ---------- The wishes ---------- */}
@@ -380,6 +374,12 @@ export default async function TrustPage({ params, searchParams }: PageProps<"/t/
           )}
         </aside>
       </div>
+
+      {(role.kind === "settlor" || role.kind === "legacy") && (
+        <section className="mt-16 border-t border-rule pt-6">
+          <DeleteTrust trustId={trust.id} accessKey={key} name={trust.name} balance={state.balance} />
+        </section>
+      )}
     </div>
   );
 }
