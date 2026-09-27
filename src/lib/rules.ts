@@ -99,9 +99,11 @@ export function enforce(opts: {
     }
     if (review) amount = 0;
   }
-  // A pause holds an allowed payment rather than turning it into a no.
+  // A pause holds an allowed payment for review rather than turning it into a
+  // no; once payouts resume, the protector or settlor can approve it.
   if (wantsPay && paused && amount > 0) {
-    checks.push({ rule: "Payouts paused", passed: false, note: "The settlor or protector has paused payouts, so this is approved but held until they resume" });
+    checks.push({ rule: "Payouts paused", passed: false, note: "Payouts are paused, so this waits for review" });
+    review = { reason: "Payouts were paused when this was decided.", amount };
     amount = 0;
   }
   return { final, amount, checks, review };

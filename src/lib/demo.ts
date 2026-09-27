@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import { newKey } from "./access";
+import { oneAtATime } from "./queue";
 import { newId, saveTrust } from "./store";
 import { TEMPLATES } from "./templates";
 import type { Trust } from "./types";
@@ -46,11 +47,13 @@ export async function createDemoTrust(): Promise<{ trust: Trust; funded: boolean
   let funded = false;
   if (trust.address) {
     try {
-      const { balance } = await treasury();
-      if (balance >= FUND) {
+      // One treasury payment at a time, so demos started together don't clash.
+      funded = await oneAtATime(TREASURY, async () => {
+        const { balance } = await treasury();
+        if (balance < FUND) return false;
         await payUsdc(TREASURY, trust.address as Address, FUND);
-        funded = true;
-      }
+        return true;
+      });
     } catch {
       // Fall through to the faucet.
     }

@@ -44,7 +44,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/trusts/[id]/req
       { status: 403 },
     );
 
-  return oneAtATime(trust.id, () => handle(req, trust, who, body));
+  // Read the trust again inside the queue, so a pause made a moment ago counts.
+  return oneAtATime(trust.id, async () => handle(req, (await getTrust(trust.id)) ?? trust, who, body));
 }
 
 async function handle(
@@ -108,6 +109,8 @@ async function handle(
       record.paid = amount;
     } catch (e) {
       record.payoutError = (e as Error).message;
+      // A failed payment waits for review, so it can be retried.
+      record.review = { status: "pending", reason: "The payment didn't go through.", amount };
     }
   }
 

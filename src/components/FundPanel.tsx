@@ -3,11 +3,26 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { erc20Abi, parseUnits, type Address } from "viem";
-import { connect, hasInjectedWallet, isMobile, payWithBase, preloadBaseAccount, walletAppLinks } from "@/lib/browser-wallet";
+import {
+  connect,
+  hasInjectedWallet,
+  isMobile,
+  payWithBase,
+  preloadBaseAccount,
+  walletAppLinks,
+} from "@/lib/browser-wallet";
 
-type Props = { trustId: string; address: string; network: string; usdc: string; testnet: boolean; explorer: string };
+type Props = {
+  trustId: string;
+  address: string;
+  network: string;
+  usdc: string;
+  testnet: boolean;
+  explorer: string;
+  accessKey?: string;
+};
 
-export default function FundPanel({ trustId, address, network, usdc, testnet, explorer }: Props) {
+export default function FundPanel({ trustId, address, network, usdc, testnet, explorer, accessKey }: Props) {
   const router = useRouter();
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState("");
@@ -80,7 +95,10 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
 
   const faucet = () =>
     run("Asking Coinbase's test faucet…", async () => {
-      const res = await fetch(`/api/trusts/${trustId}/faucet`, { method: "POST" });
+      const res = await fetch(`/api/trusts/${trustId}/faucet`, {
+        method: "POST",
+        body: JSON.stringify({ key: accessKey }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setTx(data.tx);
@@ -115,7 +133,12 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
       <p className="mt-2 text-xs text-muted">Any phone, with a passkey. Fees covered.</p>
 
       {env.injected ? (
-        <button className="btn-ghost mt-3 w-full justify-center text-sm sm:w-fit" disabled={busy} onClick={payInjected} type="button">
+        <button
+          className="btn-ghost mt-3 w-full justify-center text-sm sm:w-fit"
+          disabled={busy}
+          onClick={payInjected}
+          type="button"
+        >
           Send from the wallet in this browser
         </button>
       ) : (
@@ -135,9 +158,7 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
 
       <details className="mt-4 text-sm">
         <summary className="cursor-pointer text-muted">Send to the address instead</summary>
-        <p className="mt-2 text-xs text-muted">
-          USDC on {testnet ? "Base Sepolia" : "Base"} only.
-        </p>
+        <p className="mt-2 text-xs text-muted">USDC on {testnet ? "Base Sepolia" : "Base"} only.</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <code className="break-all rounded bg-rule/40 px-2 py-1 text-xs">{address}</code>
           <button className="btn-ghost text-xs" onClick={copy} type="button">
@@ -163,7 +184,12 @@ export default function FundPanel({ trustId, address, network, usdc, testnet, ex
       <div aria-live="polite">
         {status && <p className="mt-3 text-sm">{status}</p>}
         {tx && (
-          <a className="mt-1 inline-block text-sm underline" href={`${explorer}/tx/${tx}`} target="_blank" rel="noreferrer">
+          <a
+            className="mt-1 inline-block text-sm underline"
+            href={`${explorer}/tx/${tx}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             See the transaction
           </a>
         )}
